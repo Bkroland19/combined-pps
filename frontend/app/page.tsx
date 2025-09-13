@@ -108,6 +108,10 @@ export default function PPSDashboard() {
 	const [selectedDistrict, setSelectedDistrict] = useState<string>("all");
 	const [selectedSubCounty, setSelectedSubCounty] = useState<string>("all");
 	const [selectedFacility, setSelectedFacility] = useState<string>("all");
+	const [selectedOwnership, setSelectedOwnership] = useState<string>("all");
+	const [selectedLevelOfCare, setSelectedLevelOfCare] =
+		useState<string>("all");
+	const [selectedWardName, setSelectedWardName] = useState<string>("all");
 
 	// Get unique filter options from patient data
 	const getFilterOptions = () => {
@@ -160,7 +164,42 @@ export default function PPSDashboard() {
 					.sort()
 			: [];
 
-		return { regions, districts, subCounties, facilities };
+		const ownerships = [...new Set(allPatients.map((p) => p.ownership))]
+			.filter(Boolean)
+			.sort();
+
+		const levelsOfCare = [
+			...new Set(allPatients.map((p) => p.level_of_care)),
+		]
+			.filter(Boolean)
+			.sort();
+
+		const wardNames =
+			selectedFacility && selectedFacility !== "all"
+				? [
+						...new Set(
+							allPatients
+								.filter(
+									(p) =>
+										p.facility ===
+										selectedFacility
+								)
+								.map((p) => p.ward_name)
+						),
+				  ]
+						.filter(Boolean)
+						.sort()
+				: [];
+
+		return {
+			regions,
+			districts,
+			subCounties,
+			facilities,
+			ownerships,
+			levelsOfCare,
+			wardNames,
+		};
 	};
 
 	// Filter patients based on selections
@@ -188,6 +227,24 @@ export default function PPSDashboard() {
 				selectedFacility &&
 				selectedFacility !== "all" &&
 				patient.facility !== selectedFacility
+			)
+				return false;
+			if (
+				selectedOwnership &&
+				selectedOwnership !== "all" &&
+				patient.ownership !== selectedOwnership
+			)
+				return false;
+			if (
+				selectedLevelOfCare &&
+				selectedLevelOfCare !== "all" &&
+				patient.level_of_care !== selectedLevelOfCare
+			)
+				return false;
+			if (
+				selectedWardName &&
+				selectedWardName !== "all" &&
+				patient.ward_name !== selectedWardName
 			)
 				return false;
 			return true;
@@ -298,6 +355,12 @@ export default function PPSDashboard() {
 	const handleSubCountyChange = (subCounty: string) => {
 		setSelectedSubCounty(subCounty);
 		setSelectedFacility("all");
+		setSelectedWardName("all");
+	};
+
+	const handleFacilityChange = (facility: string) => {
+		setSelectedFacility(facility);
+		setSelectedWardName("all");
 	};
 
 	// Get current filtered data for display
@@ -383,8 +446,8 @@ export default function PPSDashboard() {
 			>
 				<header className="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/50">
 					<div className="px-6 py-4">
-						<div className="flex items-center justify-between">
-							<div className="flex items-center gap-4">
+						<div className="flex flex-col items-center justify-start gap-4">
+							<div className="flex w-full items-center gap-4">
 								<Button
 									variant="ghost"
 									size="sm"
@@ -407,7 +470,7 @@ export default function PPSDashboard() {
 								</div>
 							</div>
 
-							<div className="flex items-center gap-3">
+							<div className="flex w-full items-center gap-3 flex-wrap">
 								{/* Cascading Filter Dropdowns */}
 								<div className="flex items-center gap-2">
 									{/* Region Dropdown */}
@@ -519,7 +582,7 @@ export default function PPSDashboard() {
 										<Select
 											value={selectedFacility}
 											onValueChange={
-												setSelectedFacility
+												handleFacilityChange
 											}
 										>
 											<SelectTrigger className="w-44">
@@ -549,6 +612,111 @@ export default function PPSDashboard() {
 										</Select>
 									)}
 
+									{/* Ownership Dropdown */}
+									<Select
+										value={selectedOwnership}
+										onValueChange={
+											setSelectedOwnership
+										}
+									>
+										<SelectTrigger className="w-36">
+											<SelectValue placeholder="Ownership" />
+										</SelectTrigger>
+										<SelectContent>
+											<SelectItem value="all">
+												All Ownership
+											</SelectItem>
+											{getFilterOptions().ownerships.map(
+												(ownership) => (
+													<SelectItem
+														key={
+															ownership
+														}
+														value={
+															ownership
+														}
+													>
+														{
+															ownership
+														}
+													</SelectItem>
+												)
+											)}
+										</SelectContent>
+									</Select>
+
+									{/* Level of Care Dropdown */}
+									<Select
+										value={selectedLevelOfCare}
+										onValueChange={
+											setSelectedLevelOfCare
+										}
+									>
+										<SelectTrigger className="w-36">
+											<SelectValue placeholder="Level of Care" />
+										</SelectTrigger>
+										<SelectContent>
+											<SelectItem value="all">
+												All Levels
+											</SelectItem>
+											{getFilterOptions().levelsOfCare.map(
+												(level) => (
+													<SelectItem
+														key={
+															level
+														}
+														value={
+															level
+														}
+													>
+														{level}
+													</SelectItem>
+												)
+											)}
+										</SelectContent>
+									</Select>
+
+									{/* Ward Name Dropdown - only show when facility is selected */}
+									{selectedFacility &&
+										selectedFacility !==
+											"all" && (
+											<Select
+												value={
+													selectedWardName
+												}
+												onValueChange={
+													setSelectedWardName
+												}
+											>
+												<SelectTrigger className="w-36">
+													<SelectValue placeholder="Ward" />
+												</SelectTrigger>
+												<SelectContent>
+													<SelectItem value="all">
+														All Wards
+													</SelectItem>
+													{getFilterOptions().wardNames.map(
+														(
+															ward
+														) => (
+															<SelectItem
+																key={
+																	ward
+																}
+																value={
+																	ward
+																}
+															>
+																{
+																	ward
+																}
+															</SelectItem>
+														)
+													)}
+												</SelectContent>
+											</Select>
+										)}
+
 									{/* Clear Filters */}
 									{((selectedRegion &&
 										selectedRegion !== "all") ||
@@ -560,6 +728,15 @@ export default function PPSDashboard() {
 												"all") ||
 										(selectedFacility &&
 											selectedFacility !==
+												"all") ||
+										(selectedOwnership &&
+											selectedOwnership !==
+												"all") ||
+										(selectedLevelOfCare &&
+											selectedLevelOfCare !==
+												"all") ||
+										(selectedWardName &&
+											selectedWardName !==
 												"all")) && (
 										<Button
 											variant="outline"
@@ -575,6 +752,15 @@ export default function PPSDashboard() {
 													"all"
 												);
 												setSelectedFacility(
+													"all"
+												);
+												setSelectedOwnership(
+													"all"
+												);
+												setSelectedLevelOfCare(
+													"all"
+												);
+												setSelectedWardName(
 													"all"
 												);
 											}}
@@ -615,7 +801,13 @@ export default function PPSDashboard() {
 						(selectedSubCounty &&
 							selectedSubCounty !== "all") ||
 						(selectedFacility &&
-							selectedFacility !== "all")) && (
+							selectedFacility !== "all") ||
+						(selectedOwnership &&
+							selectedOwnership !== "all") ||
+						(selectedLevelOfCare &&
+							selectedLevelOfCare !== "all") ||
+						(selectedWardName &&
+							selectedWardName !== "all")) && (
 						<div className="mb-6 p-4 bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 rounded-lg">
 							<div className="flex items-center justify-between">
 								<div className="flex items-center gap-2">
@@ -676,6 +868,45 @@ export default function PPSDashboard() {
 													}
 												</Badge>
 											)}
+										{selectedOwnership &&
+											selectedOwnership !==
+												"all" && (
+												<Badge
+													variant="secondary"
+													className="bg-orange-100 text-orange-700"
+												>
+													Ownership:{" "}
+													{
+														selectedOwnership
+													}
+												</Badge>
+											)}
+										{selectedLevelOfCare &&
+											selectedLevelOfCare !==
+												"all" && (
+												<Badge
+													variant="secondary"
+													className="bg-teal-100 text-teal-700"
+												>
+													Level:{" "}
+													{
+														selectedLevelOfCare
+													}
+												</Badge>
+											)}
+										{selectedWardName &&
+											selectedWardName !==
+												"all" && (
+												<Badge
+													variant="secondary"
+													className="bg-pink-100 text-pink-700"
+												>
+													Ward:{" "}
+													{
+														selectedWardName
+													}
+												</Badge>
+											)}
 									</div>
 								</div>
 								<Button
@@ -686,6 +917,9 @@ export default function PPSDashboard() {
 										setSelectedDistrict("all");
 										setSelectedSubCounty("all");
 										setSelectedFacility("all");
+										setSelectedOwnership("all");
+										setSelectedLevelOfCare("all");
+										setSelectedWardName("all");
 									}}
 									className="text-blue-600 hover:text-blue-700"
 								>
@@ -695,7 +929,7 @@ export default function PPSDashboard() {
 						</div>
 					)}
 
-					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
 						<Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/50 border-blue-200/50 dark:border-blue-800/50">
 							<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
 								<CardTitle className="text-sm font-medium text-blue-700 dark:text-blue-300">
@@ -764,28 +998,6 @@ export default function PPSDashboard() {
 								</div>
 								<p className="text-xs text-purple-600 dark:text-purple-400">
 									Antibiotic prescriptions
-								</p>
-							</CardContent>
-						</Card>
-
-						<Card className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/50 dark:to-orange-900/50 border-orange-200/50 dark:border-orange-800/50">
-							<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-								<CardTitle className="text-sm font-medium text-orange-700 dark:text-orange-300">
-									Total Specimens
-								</CardTitle>
-								<div className="p-2 bg-orange-500/10 rounded-lg">
-									<TestTube className="h-4 w-4 text-orange-600 dark:text-orange-400" />
-								</div>
-							</CardHeader>
-							<CardContent>
-								<div className="text-3xl font-bold text-orange-900 dark:text-orange-100">
-									{loading
-										? "..."
-										: specimenStats?.total_specimens?.toLocaleString() ||
-										  "0"}
-								</div>
-								<p className="text-xs text-orange-600 dark:text-orange-400">
-									Lab specimens collected
 								</p>
 							</CardContent>
 						</Card>
@@ -978,29 +1190,7 @@ export default function PPSDashboard() {
 							</div>
 
 							{/* Additional PPS Indicators Section */}
-							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-								{/* PPS Indicator 5.3 */}
-								<Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-									<CardHeader>
-										<CardTitle className="text-sm font-medium flex items-center gap-2">
-											<Activity className="h-4 w-4 text-orange-600" />
-											5.3 Injectable
-											Antibiotics at OPD
-										</CardTitle>
-									</CardHeader>
-									<CardContent>
-										<div className="text-xl font-bold text-slate-900 dark:text-slate-100">
-											{loading
-												? "..."
-												: "12.3%"}
-										</div>
-										<p className="text-xs text-muted-foreground mt-1">
-											Injectable vs total
-											antibiotic prescriptions
-										</p>
-									</CardContent>
-								</Card>
-
+							<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 								{/* PPS Indicator 5.5 */}
 								<Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
 									<CardHeader>
