@@ -54,6 +54,7 @@ import {
 	Target,
 	Award,
 	Globe,
+	Filter,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import {
@@ -63,6 +64,13 @@ import {
 	SpecimenStats,
 	Patient,
 } from "@/lib/api";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 
 // Data transformation utilities
 const formatChartData = (
@@ -92,10 +100,143 @@ export default function PPSDashboard() {
 		null
 	);
 	const [recentPatients, setRecentPatients] = useState<Patient[]>([]);
+	const [allPatients, setAllPatients] = useState<Patient[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 
-	// Fetch data on component mount
+	// Dropdown filters
+	const [selectedRegion, setSelectedRegion] = useState<string>("");
+	const [selectedDistrict, setSelectedDistrict] = useState<string>("");
+	const [selectedFacility, setSelectedFacility] = useState<string>("");
+
+	// Hierarchical data structure
+	const regionData = {
+		central: ["kampala", "wakiso", "mukono", "mubende", "luwero"],
+		eastern: ["mbale", "jinja", "soroti", "tororo", "busia"],
+		northern: ["gulu", "lira", "arua", "kitgum", "pader"],
+		western: ["mbarara", "hoima", "kasese", "kabale", "bundibugyo"],
+	};
+
+	const facilityTypes = [
+		"Regional Hospital",
+		"District Hospital",
+		"Health Centre IV",
+		"Health Centre III",
+		"Health Centre II",
+		"Private Clinic",
+		"Mission Hospital",
+		"Specialized Hospital",
+	];
+
+	// Reset dependent selections when parent changes
+	const handleRegionChange = (region: string) => {
+		setSelectedRegion(region);
+		setSelectedDistrict("");
+		setSelectedFacility("");
+	};
+
+	const handleDistrictChange = (district: string) => {
+		setSelectedDistrict(district);
+		setSelectedFacility("");
+	};
+
+	// Filter patients based on selections - only filter if filters are actually selected
+	const getFilteredPatients = () => {
+		// If no filters are selected, return all patients
+		if (!selectedRegion && !selectedDistrict && !selectedFacility) {
+			return allPatients;
+		}
+
+		return allPatients.filter((patient) => {
+			// Apply region filter
+			if (
+				selectedRegion &&
+				selectedRegion !== "all" &&
+				patient.region.toLowerCase() !==
+					selectedRegion.toLowerCase()
+			) {
+				return false;
+			}
+
+			// Apply district filter
+			if (
+				selectedDistrict &&
+				selectedDistrict !== "all" &&
+				patient.district.toLowerCase() !==
+					selectedDistrict.toLowerCase()
+			) {
+				return false;
+			}
+
+			// Apply facility filter (search in facility name)
+			if (
+				selectedFacility &&
+				selectedFacility !== "all" &&
+				!patient.facility
+					.toLowerCase()
+					.includes(selectedFacility.toLowerCase())
+			) {
+				return false;
+			}
+
+			return true;
+		});
+	};
+
+	// Calculate filtered stats
+	const getFilteredStats = () => {
+		const filteredPatients = getFilteredPatients();
+		const totalPatients = filteredPatients.length;
+		const patientsOnAntibiotics = filteredPatients.filter(
+			(p) => p.patient_on_antibiotic === "yes"
+		).length;
+
+		// Group by region
+		const byRegion = filteredPatients.reduce((acc, patient) => {
+			const region = patient.region;
+			const existing = acc.find((item) => item.region === region);
+			if (existing) {
+				existing.count++;
+			} else {
+				acc.push({ region, count: 1 });
+			}
+			return acc;
+		}, [] as Array<{ region: string; count: number }>);
+
+		// Group by facility
+		const byFacility = filteredPatients.reduce((acc, patient) => {
+			const facility = patient.facility;
+			const existing = acc.find((item) => item.facility === facility);
+			if (existing) {
+				existing.count++;
+			} else {
+				acc.push({ facility, count: 1 });
+			}
+			return acc;
+		}, [] as Array<{ facility: string; count: number }>);
+
+		// Group by ward
+		const byWard = filteredPatients.reduce((acc, patient) => {
+			const ward = patient.ward_name;
+			const existing = acc.find((item) => item.ward === ward);
+			if (existing) {
+				existing.count++;
+			} else {
+				acc.push({ ward, count: 1 });
+			}
+			return acc;
+		}, [] as Array<{ ward: string; count: number }>);
+
+		return {
+			total_patients: totalPatients,
+			patients_on_antibiotic: patientsOnAntibiotics,
+			by_region: byRegion,
+			by_facility: byFacility,
+			by_ward: byWard,
+		};
+	};
+
+	// Fetch data on component mount and when search filters change
 	useEffect(() => {
 		const fetchData = async () => {
 			try {
@@ -106,18 +247,19 @@ export default function PPSDashboard() {
 					patientStatsRes,
 					antibioticStatsRes,
 					specimenStatsRes,
-					patientsRes,
+					allPatientsRes,
 				] = await Promise.all([
 					PPSApi.getPatientStats(),
 					PPSApi.getAntibioticStats(),
 					PPSApi.getSpecimenStats(),
-					PPSApi.getPatients({ limit: 10 }),
+					PPSApi.getPatients(), // Get all patients for filtering
 				]);
 
 				setPatientStats(patientStatsRes);
 				setAntibioticStats(antibioticStatsRes);
 				setSpecimenStats(specimenStatsRes);
-				setRecentPatients(patientsRes.data);
+				setAllPatients(allPatientsRes.data);
+				setRecentPatients(allPatientsRes.data); // Show all patients
 			} catch (err) {
 				console.error("Error fetching data:", err);
 				setError(
@@ -130,6 +272,10 @@ export default function PPSDashboard() {
 
 		fetchData();
 	}, []);
+
+	// Get current filtered data for display
+	const filteredStats = getFilteredStats();
+	const filteredPatients = getFilteredPatients();
 
 	const sidebarItems = [
 		{ id: "visuals", label: "Visuals", icon: Eye },
@@ -235,13 +381,151 @@ export default function PPSDashboard() {
 							</div>
 
 							<div className="flex items-center gap-3">
-								<div className="relative">
-									<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
-									<input
-										type="text"
-										placeholder="Search..."
-										className="pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-									/>
+								{/* Stepwise Dropdown Filters */}
+								<div className="flex items-center gap-2">
+									{/* Region Dropdown */}
+									<Select
+										value={selectedRegion}
+										onValueChange={
+											handleRegionChange
+										}
+									>
+										<SelectTrigger className="w-36">
+											<SelectValue placeholder="Select Region" />
+										</SelectTrigger>
+										<SelectContent>
+											<SelectItem value="all">
+												All Regions
+											</SelectItem>
+											<SelectItem value="central">
+												Central
+											</SelectItem>
+											<SelectItem value="eastern">
+												Eastern
+											</SelectItem>
+											<SelectItem value="northern">
+												Northern
+											</SelectItem>
+											<SelectItem value="western">
+												Western
+											</SelectItem>
+										</SelectContent>
+									</Select>
+
+									{/* District Dropdown - only show if region is selected */}
+									{selectedRegion &&
+										selectedRegion !== "all" && (
+											<Select
+												value={
+													selectedDistrict
+												}
+												onValueChange={
+													handleDistrictChange
+												}
+											>
+												<SelectTrigger className="w-36">
+													<SelectValue placeholder="Select District" />
+												</SelectTrigger>
+												<SelectContent>
+													<SelectItem value="all">
+														All
+														Districts
+													</SelectItem>
+													{regionData[
+														selectedRegion as keyof typeof regionData
+													]?.map(
+														(
+															district
+														) => (
+															<SelectItem
+																key={
+																	district
+																}
+																value={
+																	district
+																}
+															>
+																{district
+																	.charAt(
+																		0
+																	)
+																	.toUpperCase() +
+																	district.slice(
+																		1
+																	)}
+															</SelectItem>
+														)
+													)}
+												</SelectContent>
+											</Select>
+										)}
+
+									{/* Facility Type Dropdown - only show if district is selected */}
+									{selectedDistrict &&
+										selectedDistrict !==
+											"all" && (
+											<Select
+												value={
+													selectedFacility
+												}
+												onValueChange={
+													setSelectedFacility
+												}
+											>
+												<SelectTrigger className="w-44">
+													<SelectValue placeholder="Select Facility Type" />
+												</SelectTrigger>
+												<SelectContent>
+													<SelectItem value="all">
+														All
+														Facility
+														Types
+													</SelectItem>
+													{facilityTypes.map(
+														(
+															facility
+														) => (
+															<SelectItem
+																key={
+																	facility
+																}
+																value={
+																	facility
+																}
+															>
+																{
+																	facility
+																}
+															</SelectItem>
+														)
+													)}
+												</SelectContent>
+											</Select>
+										)}
+
+									{/* Clear Filters Button */}
+									{(selectedRegion ||
+										selectedDistrict ||
+										selectedFacility) && (
+										<Button
+											variant="outline"
+											size="sm"
+											onClick={() => {
+												setSelectedRegion(
+													""
+												);
+												setSelectedDistrict(
+													""
+												);
+												setSelectedFacility(
+													""
+												);
+											}}
+											className="text-slate-600 hover:text-slate-700"
+										>
+											Clear
+										</Button>
+									)}
 								</div>
 								<Button
 									variant="ghost"
@@ -268,6 +552,75 @@ export default function PPSDashboard() {
 						</div>
 					)}
 
+					{/* Filter Status */}
+					{(selectedRegion ||
+						selectedDistrict ||
+						selectedFacility) && (
+						<div className="mb-6 p-4 bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 rounded-lg">
+							<div className="flex items-center justify-between">
+								<div className="flex items-center gap-2">
+									<Filter className="h-4 w-4 text-blue-600" />
+									<span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+										Active filters:
+									</span>
+									<div className="flex gap-1">
+										{selectedRegion &&
+											selectedRegion !==
+												"all" && (
+												<Badge
+													variant="secondary"
+													className="bg-blue-100 text-blue-700"
+												>
+													Region:{" "}
+													{
+														selectedRegion
+													}
+												</Badge>
+											)}
+										{selectedDistrict &&
+											selectedDistrict !==
+												"all" && (
+												<Badge
+													variant="secondary"
+													className="bg-green-100 text-green-700"
+												>
+													District:{" "}
+													{
+														selectedDistrict
+													}
+												</Badge>
+											)}
+										{selectedFacility &&
+											selectedFacility !==
+												"all" && (
+												<Badge
+													variant="secondary"
+													className="bg-purple-100 text-purple-700"
+												>
+													Facility:{" "}
+													{
+														selectedFacility
+													}
+												</Badge>
+											)}
+									</div>
+								</div>
+								<Button
+									variant="ghost"
+									size="sm"
+									onClick={() => {
+										setSelectedRegion("");
+										setSelectedDistrict("");
+										setSelectedFacility("");
+									}}
+									className="text-blue-600 hover:text-blue-700"
+								>
+									Clear filters
+								</Button>
+							</div>
+						</div>
+					)}
+
 					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
 						<Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/50 border-blue-200/50 dark:border-blue-800/50">
 							<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -282,7 +635,7 @@ export default function PPSDashboard() {
 								<div className="text-3xl font-bold text-blue-900 dark:text-blue-100">
 									{loading
 										? "..."
-										: patientStats?.total_patients?.toLocaleString() ||
+										: filteredStats?.total_patients?.toLocaleString() ||
 										  "0"}
 								</div>
 								<p className="text-xs text-blue-600 dark:text-blue-400">
@@ -304,14 +657,14 @@ export default function PPSDashboard() {
 								<div className="text-3xl font-bold text-emerald-900 dark:text-emerald-100">
 									{loading
 										? "..."
-										: patientStats?.patients_on_antibiotic?.toLocaleString() ||
+										: filteredStats?.patients_on_antibiotic?.toLocaleString() ||
 										  "0"}
 								</div>
 								<p className="text-xs text-emerald-600 dark:text-emerald-400">
-									{patientStats?.total_patients
+									{filteredStats?.total_patients
 										? `${(
-												(patientStats.patients_on_antibiotic /
-													patientStats.total_patients) *
+												(filteredStats.patients_on_antibiotic /
+													filteredStats.total_patients) *
 												100
 										  ).toFixed(1)}% of total`
 										: "Antibiotic usage"}
@@ -437,11 +790,11 @@ export default function PPSDashboard() {
 										<div className="text-2xl font-bold text-blue-900 dark:text-blue-100">
 											{loading
 												? "..."
-												: patientStats?.patients_on_antibiotic &&
+												: filteredStats?.patients_on_antibiotic &&
 												  antibioticStats?.total_antibiotics
 												? (
 														antibioticStats.total_antibiotics /
-														patientStats.patients_on_antibiotic
+														filteredStats.patients_on_antibiotic
 												  ).toFixed(1)
 												: "0.0"}
 										</div>
@@ -450,7 +803,7 @@ export default function PPSDashboard() {
 											{antibioticStats?.total_antibiotics ||
 												0}{" "}
 											/ D:{" "}
-											{patientStats?.patients_on_antibiotic ||
+											{filteredStats?.patients_on_antibiotic ||
 												0}
 										</p>
 									</CardContent>
@@ -471,20 +824,20 @@ export default function PPSDashboard() {
 										<div className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
 											{loading
 												? "..."
-												: patientStats?.total_patients
+												: filteredStats?.total_patients
 												? `${(
-														(patientStats.patients_on_antibiotic /
-															patientStats.total_patients) *
+														(filteredStats.patients_on_antibiotic /
+															filteredStats.total_patients) *
 														100
 												  ).toFixed(1)}%`
 												: "0.0%"}
 										</div>
 										<p className="text-xs text-emerald-600 dark:text-emerald-400">
 											N:{" "}
-											{patientStats?.patients_on_antibiotic ||
+											{filteredStats?.patients_on_antibiotic ||
 												0}{" "}
 											/ D:{" "}
-											{patientStats?.total_patients ||
+											{filteredStats?.total_patients ||
 												0}
 										</p>
 									</CardContent>
@@ -530,10 +883,10 @@ export default function PPSDashboard() {
 											{loading
 												? "..."
 												: specimenStats?.total_specimens &&
-												  patientStats?.patients_on_antibiotic
+												  filteredStats?.patients_on_antibiotic
 												? `${(
 														(specimenStats.total_specimens /
-															patientStats.patients_on_antibiotic) *
+															filteredStats.patients_on_antibiotic) *
 														100
 												  ).toFixed(1)}%`
 												: "0.0%"}
@@ -543,7 +896,7 @@ export default function PPSDashboard() {
 											{specimenStats?.total_specimens ||
 												0}{" "}
 											/ D:{" "}
-											{patientStats?.patients_on_antibiotic ||
+											{filteredStats?.patients_on_antibiotic ||
 												0}
 										</p>
 									</CardContent>
@@ -658,16 +1011,16 @@ export default function PPSDashboard() {
 																	{
 																		name: "On Antibiotics",
 																		value:
-																			patientStats?.patients_on_antibiotic ||
+																			filteredStats?.patients_on_antibiotic ||
 																			0,
 																		fill: "hsl(var(--chart-1))",
 																	},
 																	{
 																		name: "Not on Antibiotics",
 																		value:
-																			(patientStats?.total_patients ||
+																			(filteredStats?.total_patients ||
 																				0) -
-																			(patientStats?.patients_on_antibiotic ||
+																			(filteredStats?.patients_on_antibiotic ||
 																				0),
 																		fill: "hsl(var(--chart-2))",
 																	},
@@ -712,7 +1065,7 @@ export default function PPSDashboard() {
 												</ResponsiveContainer>
 												<div className="mt-2">
 													<div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-														{patientStats?.total_patients?.toLocaleString() ||
+														{filteredStats?.total_patients?.toLocaleString() ||
 															"0"}
 													</div>
 													<div className="text-sm text-muted-foreground">
@@ -838,10 +1191,10 @@ export default function PPSDashboard() {
 												</span>
 												<span className="text-xs text-muted-foreground">
 													{specimenStats?.total_specimens &&
-													patientStats?.patients_on_antibiotic
+													filteredStats?.patients_on_antibiotic
 														? `${Math.round(
 																(specimenStats.total_specimens /
-																	patientStats.patients_on_antibiotic) *
+																	filteredStats.patients_on_antibiotic) *
 																	100
 														  )}%`
 														: "0%"}
@@ -883,7 +1236,7 @@ export default function PPSDashboard() {
 													ward
 												</span>
 												<span className="text-xs font-mono">
-													{patientStats?.total_patients
+													{filteredStats?.total_patients
 														? "4.2"
 														: "0"}{" "}
 													days
@@ -897,7 +1250,7 @@ export default function PPSDashboard() {
 												</span>
 												<span className="text-xs font-mono">
 													{Math.round(
-														(patientStats?.total_patients ||
+														(filteredStats?.total_patients ||
 															0) *
 															0.18
 													)}
@@ -960,7 +1313,7 @@ export default function PPSDashboard() {
 												</span>
 												<span className="text-xs font-mono">
 													{Math.round(
-														(patientStats?.patients_on_antibiotic ||
+														(filteredStats?.patients_on_antibiotic ||
 															0) *
 															0.75
 													)}
@@ -972,7 +1325,7 @@ export default function PPSDashboard() {
 												</span>
 												<span className="text-xs font-mono">
 													{Math.round(
-														(patientStats?.patients_on_antibiotic ||
+														(filteredStats?.patients_on_antibiotic ||
 															0) *
 															0.25
 													)}
@@ -1132,7 +1485,7 @@ export default function PPSDashboard() {
 														label={({
 															name,
 															percent,
-														}) =>
+														}: any) =>
 															`${name}\n${(
 																percent *
 																100
@@ -1212,7 +1565,7 @@ export default function PPSDashboard() {
 												</span>
 												<span className="font-mono text-sm">
 													{Math.round(
-														(patientStats?.total_patients ||
+														(filteredStats?.total_patients ||
 															0) *
 															0.15
 													)}
@@ -1225,7 +1578,7 @@ export default function PPSDashboard() {
 												</span>
 												<span className="font-mono text-sm">
 													{Math.round(
-														(patientStats?.total_patients ||
+														(filteredStats?.total_patients ||
 															0) *
 															0.05
 													)}
@@ -1259,9 +1612,9 @@ export default function PPSDashboard() {
 													Ward
 												</span>
 												<span className="font-mono text-sm">
-													{patientStats?.total_patients
+													{filteredStats?.total_patients
 														? (
-																patientStats.total_patients *
+																filteredStats.total_patients *
 																4.2
 														  ).toFixed(
 																0
@@ -1358,7 +1711,7 @@ export default function PPSDashboard() {
 											) : (
 												<BarChart
 													data={
-														patientStats?.by_region ||
+														filteredStats?.by_region ||
 														[]
 													}
 												>
@@ -1422,7 +1775,7 @@ export default function PPSDashboard() {
 														label={({
 															name,
 															percent,
-														}) =>
+														}: any) =>
 															`${name}\n${(
 																percent *
 																100
@@ -1569,7 +1922,7 @@ export default function PPSDashboard() {
 														label={({
 															name,
 															percent,
-														}) =>
+														}: any) =>
 															`${name}\n${(
 																percent *
 																100
@@ -1742,7 +2095,7 @@ export default function PPSDashboard() {
 														label={({
 															name,
 															percent,
-														}) =>
+														}: any) =>
 															`${name} ${(
 																percent *
 																100
@@ -1856,7 +2209,7 @@ export default function PPSDashboard() {
 											) : (
 												<BarChart
 													data={
-														patientStats?.by_facility ||
+														filteredStats?.by_facility ||
 														[]
 													}
 													layout="horizontal"
@@ -1906,7 +2259,7 @@ export default function PPSDashboard() {
 											) : (
 												<BarChart
 													data={
-														patientStats?.by_ward ||
+														filteredStats?.by_ward ||
 														[]
 													}
 												>
@@ -1969,7 +2322,7 @@ export default function PPSDashboard() {
 														label={({
 															name,
 															percent,
-														}) =>
+														}: any) =>
 															`${name}\n${(
 																percent *
 																100
@@ -2167,7 +2520,7 @@ export default function PPSDashboard() {
 															Loading...
 														</td>
 													</tr>
-												) : recentPatients.length ===
+												) : filteredPatients.length ===
 												  0 ? (
 													<tr>
 														<td
@@ -2182,7 +2535,7 @@ export default function PPSDashboard() {
 														</td>
 													</tr>
 												) : (
-													recentPatients.map(
+													filteredPatients.map(
 														(
 															patient
 														) => (
