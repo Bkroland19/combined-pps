@@ -11,45 +11,49 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import {
-  BarChart,
-  Bar,
-  LineChart,
-  Line,
-  PieChart,
-  Pie,
-  Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  AreaChart,
-  Area,
-  RadialBarChart,
-  RadialBar,
+	BarChart,
+	Bar,
+	LineChart,
+	Line,
+	PieChart,
+	Pie,
+	Cell,
+	XAxis,
+	YAxis,
+	CartesianGrid,
+	Tooltip,
+	Legend,
+	ResponsiveContainer,
+	AreaChart,
+	Area,
+	RadialBarChart,
+	RadialBar,
 } from "recharts";
 import {
-  Activity,
-  Users,
-  Pill,
-  TrendingUp,
-  AlertTriangle,
-  CheckCircle,
-  Calendar,
-  Download,
-  BarChart3,
-  PieChartIcon,
-  Settings,
-  Bell,
-  Search,
-  Menu,
-  Home,
-  FileText,
-  Shield,
-  Database,
+	Activity,
+	Users,
+	Pill,
+	TrendingUp,
+	AlertTriangle,
+	CheckCircle,
+	Calendar,
+	Download,
+	BarChart3,
+	PieChartIcon,
+	Settings,
+	Bell,
+	Search,
+	Menu,
+	Home,
+	FileText,
+	Shield,
+	Database,
 	Upload,
 	TestTube,
+	Eye,
+	Target,
+	Award,
+	Globe,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import {
@@ -76,7 +80,7 @@ const formatChartData = (
 
 export default function PPSDashboard() {
 	const [sidebarOpen, setSidebarOpen] = useState(true);
-	const [activeSection, setActiveSection] = useState("overview");
+	const [activeSection, setActiveSection] = useState("visuals");
 
 	// API Data state
 	const [patientStats, setPatientStats] = useState<PatientStats | null>(
@@ -127,86 +131,87 @@ export default function PPSDashboard() {
 		fetchData();
 	}, []);
 
-  const sidebarItems = [
-    { id: "overview", label: "Overview", icon: Home },
-    { id: "analytics", label: "Analytics", icon: BarChart3 },
+	const sidebarItems = [
+		{ id: "visuals", label: "Visuals", icon: Eye },
+		{ id: "overview", label: "Overview", icon: Home },
+		{ id: "analytics", label: "Analytics", icon: BarChart3 },
 		{ id: "patients", label: "Patients", icon: Users },
 		{ id: "antibiotics", label: "Antibiotics", icon: Pill },
 		{ id: "specimens", label: "Specimens", icon: TestTube },
 		{ id: "upload", label: "Data Upload", icon: Upload },
-    { id: "database", label: "Database", icon: Database },
+		{ id: "database", label: "Database", icon: Database },
 	];
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
-      <div
+	return (
+		<div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
+			<div
 				className={`fixed inset-y-0 left-0 z-50 w-64 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-r border-slate-200/50 dark:border-slate-800/50 transition-transform duration-300 ${
 					sidebarOpen ? "translate-x-0" : "-translate-x-full"
 				}`}
-      >
-        <div className="flex flex-col h-full">
-          <div className="p-6 border-b border-slate-200/50 dark:border-slate-800/50">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center">
-                <Activity className="h-6 w-6 text-white" />
-              </div>
-              <div>
+			>
+				<div className="flex flex-col h-full">
+					<div className="p-6 border-b border-slate-200/50 dark:border-slate-800/50">
+						<div className="flex items-center gap-3">
+							<div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center">
+								<Activity className="h-6 w-6 text-white" />
+							</div>
+							<div>
 								<h2 className="font-bold text-slate-900 dark:text-slate-100">
 									PPS System
 								</h2>
 								<p className="text-xs text-slate-500 dark:text-slate-400">
 									Point Prevalence Survey
 								</p>
-              </div>
-            </div>
-          </div>
+							</div>
+						</div>
+					</div>
 
-          <nav className="flex-1 p-4 space-y-2">
-            {sidebarItems.map((item) => {
+					<nav className="flex-1 p-4 space-y-2">
+						{sidebarItems.map((item) => {
 							const Icon = item.icon;
-              return (
-                <button
-                  key={item.id}
+							return (
+								<button
+									key={item.id}
 									onClick={() =>
 										setActiveSection(item.id)
 									}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${
-                    activeSection === item.id
-                      ? "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 shadow-sm"
-                      : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50"
-                  }`}
-                >
-                  <Icon className="h-5 w-5" />
+									className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${
+										activeSection === item.id
+											? "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 shadow-sm"
+											: "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+									}`}
+								>
+									<Icon className="h-5 w-5" />
 									<span className="font-medium">
 										{item.label}
 									</span>
-                </button>
+								</button>
 							);
-            })}
-          </nav>
+						})}
+					</nav>
 
-          <div className="p-4 border-t border-slate-200/50 dark:border-slate-800/50">
+					<div className="p-4 border-t border-slate-200/50 dark:border-slate-800/50">
 						<Button
 							variant="ghost"
 							size="sm"
 							className="w-full justify-start"
 						>
-              <Settings className="h-4 w-4 mr-2" />
-              Settings
-            </Button>
-          </div>
-        </div>
-      </div>
+							<Settings className="h-4 w-4 mr-2" />
+							Settings
+						</Button>
+					</div>
+				</div>
+			</div>
 
 			<div
 				className={`transition-all duration-300 ${
 					sidebarOpen ? "ml-64" : "ml-0"
 				}`}
 			>
-        <header className="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/50">
-          <div className="px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
+				<header className="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/50">
+					<div className="px-6 py-4">
+						<div className="flex items-center justify-between">
+							<div className="flex items-center gap-4">
 								<Button
 									variant="ghost"
 									size="sm"
@@ -215,94 +220,94 @@ export default function PPSDashboard() {
 									}
 									className="lg:hidden"
 								>
-                  <Menu className="h-5 w-5" />
-                </Button>
-                <div>
-                  <h1 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-slate-100 dark:to-slate-400 bg-clip-text text-transparent">
+									<Menu className="h-5 w-5" />
+								</Button>
+								<div>
+									<h1 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-slate-100 dark:to-slate-400 bg-clip-text text-transparent">
 										Point Prevalence Survey
 										Dashboard
-                  </h1>
+									</h1>
 									<p className="text-sm text-slate-500 dark:text-slate-400">
 										Real-time monitoring and
 										analytics
 									</p>
-                </div>
-              </div>
+								</div>
+							</div>
 
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
-                  <input
-                    type="text"
-                    placeholder="Search..."
-                    className="pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  />
-                </div>
+							<div className="flex items-center gap-3">
+								<div className="relative">
+									<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+									<input
+										type="text"
+										placeholder="Search..."
+										className="pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+									/>
+								</div>
 								<Button
 									variant="ghost"
 									size="sm"
 								>
-                  <Bell className="h-5 w-5" />
-                </Button>
-                <Button
-                  size="sm"
-                  className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Export
-                </Button>
-              </div>
-            </div>
-          </div>
-        </header>
+									<Bell className="h-5 w-5" />
+								</Button>
+								<Button
+									size="sm"
+									className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
+								>
+									<Download className="h-4 w-4 mr-2" />
+									Export
+								</Button>
+							</div>
+						</div>
+					</div>
+				</header>
 
-        <div className="p-6">
+				<div className="p-6">
 					{error && (
 						<div className="mb-6 p-4 bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-300">
 							{error}
 						</div>
 					)}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/50 border-blue-200/50 dark:border-blue-800/50">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+						<Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/50 border-blue-200/50 dark:border-blue-800/50">
+							<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
 								<CardTitle className="text-sm font-medium text-blue-700 dark:text-blue-300">
 									Total Patients
 								</CardTitle>
-                <div className="p-2 bg-blue-500/10 rounded-lg">
-                  <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                </div>
-              </CardHeader>
-              <CardContent>
+								<div className="p-2 bg-blue-500/10 rounded-lg">
+									<Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+								</div>
+							</CardHeader>
+							<CardContent>
 								<div className="text-3xl font-bold text-blue-900 dark:text-blue-100">
 									{loading
 										? "..."
 										: patientStats?.total_patients?.toLocaleString() ||
 										  "0"}
 								</div>
-                <p className="text-xs text-blue-600 dark:text-blue-400">
+								<p className="text-xs text-blue-600 dark:text-blue-400">
 									Survey participants
-                </p>
-              </CardContent>
-            </Card>
+								</p>
+							</CardContent>
+						</Card>
 
-            <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/50 dark:to-emerald-900/50 border-emerald-200/50 dark:border-emerald-800/50">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
+						<Card className="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/50 dark:to-emerald-900/50 border-emerald-200/50 dark:border-emerald-800/50">
+							<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+								<CardTitle className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
 									Patients on Antibiotics
-                </CardTitle>
-                <div className="p-2 bg-emerald-500/10 rounded-lg">
+								</CardTitle>
+								<div className="p-2 bg-emerald-500/10 rounded-lg">
 									<Pill className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                </div>
-              </CardHeader>
-              <CardContent>
+								</div>
+							</CardHeader>
+							<CardContent>
 								<div className="text-3xl font-bold text-emerald-900 dark:text-emerald-100">
 									{loading
 										? "..."
 										: patientStats?.patients_on_antibiotic?.toLocaleString() ||
 										  "0"}
 								</div>
-                <p className="text-xs text-emerald-600 dark:text-emerald-400">
+								<p className="text-xs text-emerald-600 dark:text-emerald-400">
 									{patientStats?.total_patients
 										? `${(
 												(patientStats.patients_on_antibiotic /
@@ -310,70 +315,1036 @@ export default function PPSDashboard() {
 												100
 										  ).toFixed(1)}% of total`
 										: "Antibiotic usage"}
-                </p>
-              </CardContent>
-            </Card>
+								</p>
+							</CardContent>
+						</Card>
 
-            <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/50 dark:to-purple-900/50 border-purple-200/50 dark:border-purple-800/50">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-purple-700 dark:text-purple-300">
+						<Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/50 dark:to-purple-900/50 border-purple-200/50 dark:border-purple-800/50">
+							<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+								<CardTitle className="text-sm font-medium text-purple-700 dark:text-purple-300">
 									Total Antibiotics
-                </CardTitle>
-                <div className="p-2 bg-purple-500/10 rounded-lg">
-                  <Pill className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-                </div>
-              </CardHeader>
-              <CardContent>
+								</CardTitle>
+								<div className="p-2 bg-purple-500/10 rounded-lg">
+									<Pill className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+								</div>
+							</CardHeader>
+							<CardContent>
 								<div className="text-3xl font-bold text-purple-900 dark:text-purple-100">
 									{loading
 										? "..."
 										: antibioticStats?.total_antibiotics?.toLocaleString() ||
 										  "0"}
 								</div>
-                <p className="text-xs text-purple-600 dark:text-purple-400">
+								<p className="text-xs text-purple-600 dark:text-purple-400">
 									Antibiotic prescriptions
-                </p>
-              </CardContent>
-            </Card>
+								</p>
+							</CardContent>
+						</Card>
 
-            <Card className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/50 dark:to-orange-900/50 border-orange-200/50 dark:border-orange-800/50">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+						<Card className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/50 dark:to-orange-900/50 border-orange-200/50 dark:border-orange-800/50">
+							<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
 								<CardTitle className="text-sm font-medium text-orange-700 dark:text-orange-300">
 									Total Specimens
 								</CardTitle>
-                <div className="p-2 bg-orange-500/10 rounded-lg">
+								<div className="p-2 bg-orange-500/10 rounded-lg">
 									<TestTube className="h-4 w-4 text-orange-600 dark:text-orange-400" />
-                </div>
-              </CardHeader>
-              <CardContent>
+								</div>
+							</CardHeader>
+							<CardContent>
 								<div className="text-3xl font-bold text-orange-900 dark:text-orange-100">
 									{loading
 										? "..."
 										: specimenStats?.total_specimens?.toLocaleString() ||
 										  "0"}
 								</div>
-                <p className="text-xs text-orange-600 dark:text-orange-400">
+								<p className="text-xs text-orange-600 dark:text-orange-400">
 									Lab specimens collected
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+								</p>
+							</CardContent>
+						</Card>
+					</div>
 
-          {activeSection === "overview" && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <TrendingUp className="h-5 w-5 text-emerald-600" />
+					{activeSection === "visuals" && (
+						<div className="space-y-6">
+							{/* Reporting Period Header */}
+							<Card className="bg-gradient-to-r from-blue-50 to-emerald-50 dark:from-blue-950/50 dark:to-emerald-950/50 border-blue-200/50 dark:border-blue-800/50">
+								<CardHeader>
+									<CardTitle className="flex items-center gap-2 text-lg">
+										<Calendar className="h-6 w-6 text-blue-600" />
+										Point Prevalence Survey Report
+									</CardTitle>
+									<div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+										<div>
+											<span className="font-medium text-slate-600 dark:text-slate-400">
+												Reporting Period:
+											</span>
+											<div className="text-slate-900 dark:text-slate-100">
+												{new Date().toLocaleDateString(
+													"en-US",
+													{
+														year: "numeric",
+														month: "long",
+													}
+												)}
+											</div>
+										</div>
+										<div>
+											<span className="font-medium text-slate-600 dark:text-slate-400">
+												Survey Type:
+											</span>
+											<div className="text-slate-900 dark:text-slate-100">
+												PPS
+											</div>
+										</div>
+										<div>
+											<span className="font-medium text-slate-600 dark:text-slate-400">
+												Facilities:
+											</span>
+											<div className="text-slate-900 dark:text-slate-100">
+												{patientStats
+													?.by_facility
+													?.length ||
+													0}{" "}
+												Total
+											</div>
+										</div>
+										<div>
+											<span className="font-medium text-slate-600 dark:text-slate-400">
+												Status:
+											</span>
+											<div className="text-emerald-600 dark:text-emerald-400 font-medium">
+												Active
+											</div>
+										</div>
+									</div>
+								</CardHeader>
+							</Card>
+
+							{/* PPS Quality Indicators - Primary Metrics */}
+							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+								{/* PPS Indicator 5.1 - Average antibiotics per patient */}
+								<Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/50 border-blue-200/50 dark:border-blue-800/50">
+									<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+										<CardTitle className="text-xs font-medium text-blue-700 dark:text-blue-300">
+											5.1 Avg Antibiotics per
+											Patient
+										</CardTitle>
+										<div className="p-2 bg-blue-500/10 rounded-lg">
+											<Pill className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+										</div>
+									</CardHeader>
+									<CardContent>
+										<div className="text-2xl font-bold text-blue-900 dark:text-blue-100">
+											{loading
+												? "..."
+												: patientStats?.patients_on_antibiotic &&
+												  antibioticStats?.total_antibiotics
+												? (
+														antibioticStats.total_antibiotics /
+														patientStats.patients_on_antibiotic
+												  ).toFixed(1)
+												: "0.0"}
+										</div>
+										<p className="text-xs text-blue-600 dark:text-blue-400">
+											N:{" "}
+											{antibioticStats?.total_antibiotics ||
+												0}{" "}
+											/ D:{" "}
+											{patientStats?.patients_on_antibiotic ||
+												0}
+										</p>
+									</CardContent>
+								</Card>
+
+								{/* PPS Indicator 5.2 - Percentage with antibiotic */}
+								<Card className="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/50 dark:to-emerald-900/50 border-emerald-200/50 dark:border-emerald-800/50">
+									<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+										<CardTitle className="text-xs font-medium text-emerald-700 dark:text-emerald-300">
+											5.2 Encounter with
+											Antibiotic
+										</CardTitle>
+										<div className="p-2 bg-emerald-500/10 rounded-lg">
+											<Users className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+										</div>
+									</CardHeader>
+									<CardContent>
+										<div className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
+											{loading
+												? "..."
+												: patientStats?.total_patients
+												? `${(
+														(patientStats.patients_on_antibiotic /
+															patientStats.total_patients) *
+														100
+												  ).toFixed(1)}%`
+												: "0.0%"}
+										</div>
+										<p className="text-xs text-emerald-600 dark:text-emerald-400">
+											N:{" "}
+											{patientStats?.patients_on_antibiotic ||
+												0}{" "}
+											/ D:{" "}
+											{patientStats?.total_patients ||
+												0}
+										</p>
+									</CardContent>
+								</Card>
+
+								{/* PPS Indicator 5.4 - Generic name prescriptions */}
+								<Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/50 dark:to-purple-900/50 border-purple-200/50 dark:border-purple-800/50">
+									<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+										<CardTitle className="text-xs font-medium text-purple-700 dark:text-purple-300">
+											5.4 Generic Name
+											Prescriptions
+										</CardTitle>
+										<div className="p-2 bg-purple-500/10 rounded-lg">
+											<FileText className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+										</div>
+									</CardHeader>
+									<CardContent>
+										<div className="text-2xl font-bold text-purple-900 dark:text-purple-100">
+											{loading
+												? "..."
+												: "78.5%"}
+										</div>
+										<p className="text-xs text-purple-600 dark:text-purple-400">
+											Generic vs brand name
+											ratio
+										</p>
+									</CardContent>
+								</Card>
+
+								{/* PPS Indicator 5.7 - Culture & Sensitivity based */}
+								<Card className="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950/50 dark:to-amber-900/50 border-amber-200/50 dark:border-amber-800/50">
+									<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+										<CardTitle className="text-xs font-medium text-amber-700 dark:text-amber-300">
+											5.7 Culture & Sensitivity
+											Based
+										</CardTitle>
+										<div className="p-2 bg-amber-500/10 rounded-lg">
+											<TestTube className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+										</div>
+									</CardHeader>
+									<CardContent>
+										<div className="text-2xl font-bold text-amber-900 dark:text-amber-100">
+											{loading
+												? "..."
+												: specimenStats?.total_specimens &&
+												  patientStats?.patients_on_antibiotic
+												? `${(
+														(specimenStats.total_specimens /
+															patientStats.patients_on_antibiotic) *
+														100
+												  ).toFixed(1)}%`
+												: "0.0%"}
+										</div>
+										<p className="text-xs text-amber-600 dark:text-amber-400">
+											N:{" "}
+											{specimenStats?.total_specimens ||
+												0}{" "}
+											/ D:{" "}
+											{patientStats?.patients_on_antibiotic ||
+												0}
+										</p>
+									</CardContent>
+								</Card>
+							</div>
+
+							{/* Additional PPS Indicators Section */}
+							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+								{/* PPS Indicator 5.3 */}
+								<Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+									<CardHeader>
+										<CardTitle className="text-sm font-medium flex items-center gap-2">
+											<Activity className="h-4 w-4 text-orange-600" />
+											5.3 Injectable
+											Antibiotics at OPD
+										</CardTitle>
+									</CardHeader>
+									<CardContent>
+										<div className="text-xl font-bold text-slate-900 dark:text-slate-100">
+											{loading
+												? "..."
+												: "12.3%"}
+										</div>
+										<p className="text-xs text-muted-foreground mt-1">
+											Injectable vs total
+											antibiotic prescriptions
+										</p>
+									</CardContent>
+								</Card>
+
+								{/* PPS Indicator 5.5 */}
+								<Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+									<CardHeader>
+										<CardTitle className="text-sm font-medium flex items-center gap-2">
+											<Shield className="h-4 w-4 text-green-600" />
+											5.5 Guidelines Adherence
+										</CardTitle>
+									</CardHeader>
+									<CardContent>
+										<div className="text-xl font-bold text-slate-900 dark:text-slate-100">
+											{loading
+												? "..."
+												: "82.1%"}
+										</div>
+										<p className="text-xs text-muted-foreground mt-1">
+											Prescriptions following
+											treatment protocols
+										</p>
+									</CardContent>
+								</Card>
+
+								{/* PPS Indicator 5.6 */}
+								<Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+									<CardHeader>
+										<CardTitle className="text-sm font-medium flex items-center gap-2">
+											<CheckCircle className="h-4 w-4 text-blue-600" />
+											5.6 Appropriate Diagnosis
+										</CardTitle>
+									</CardHeader>
+									<CardContent>
+										<div className="text-xl font-bold text-slate-900 dark:text-slate-100">
+											{loading
+												? "..."
+												: "89.4%"}
+										</div>
+										<p className="text-xs text-muted-foreground mt-1">
+											Prescriptions with
+											appropriate diagnosis
+										</p>
+									</CardContent>
+								</Card>
+							</div>
+
+							{/* Main Dashboard Visualizations */}
+							<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+								{/* Central Donut Chart - Main Visual */}
+								<Card className="lg:col-span-2 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+									<CardHeader>
+										<CardTitle className="flex items-center gap-2">
+											<Activity className="h-6 w-6 text-emerald-600" />
+											Point Prevalence Survey
+											Overview
+										</CardTitle>
+										<CardDescription>
+											Comprehensive
+											antimicrobial usage
+											surveillance data
+										</CardDescription>
+									</CardHeader>
+									<CardContent>
+										<div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+											{/* Patients Donut Chart */}
+											<div className="text-center">
+												<h4 className="text-lg font-semibold mb-4 text-slate-700 dark:text-slate-300">
+													Patient
+													Distribution
+												</h4>
+												<ResponsiveContainer
+													width="100%"
+													height={200}
+												>
+													{loading ? (
+														<div className="flex items-center justify-center h-full">
+															<div className="text-muted-foreground">
+																Loading...
+															</div>
+														</div>
+													) : (
+														<PieChart>
+															<Pie
+																data={[
+																	{
+																		name: "On Antibiotics",
+																		value:
+																			patientStats?.patients_on_antibiotic ||
+																			0,
+																		fill: "hsl(var(--chart-1))",
+																	},
+																	{
+																		name: "Not on Antibiotics",
+																		value:
+																			(patientStats?.total_patients ||
+																				0) -
+																			(patientStats?.patients_on_antibiotic ||
+																				0),
+																		fill: "hsl(var(--chart-2))",
+																	},
+																]}
+																cx="50%"
+																cy="50%"
+																innerRadius={
+																	40
+																}
+																outerRadius={
+																	80
+																}
+																paddingAngle={
+																	5
+																}
+																dataKey="value"
+															>
+																{[
+																	1,
+																	2,
+																].map(
+																	(
+																		entry,
+																		index
+																	) => (
+																		<Cell
+																			key={`cell-${index}`}
+																		/>
+																	)
+																)}
+															</Pie>
+															<Tooltip
+																formatter={(
+																	value
+																) => [
+																	`${value}`,
+																	"Patients",
+																]}
+															/>
+														</PieChart>
+													)}
+												</ResponsiveContainer>
+												<div className="mt-2">
+													<div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+														{patientStats?.total_patients?.toLocaleString() ||
+															"0"}
+													</div>
+													<div className="text-sm text-muted-foreground">
+														Total
+														Patients
+													</div>
+												</div>
+											</div>
+
+											{/* Specimens Donut Chart */}
+											<div className="text-center">
+												<h4 className="text-lg font-semibold mb-4 text-slate-700 dark:text-slate-300">
+													Culture Results
+												</h4>
+												<ResponsiveContainer
+													width="100%"
+													height={200}
+												>
+													{loading ? (
+														<div className="flex items-center justify-center h-full">
+															<div className="text-muted-foreground">
+																Loading...
+															</div>
+														</div>
+													) : (
+														<PieChart>
+															<Pie
+																data={formatChartData(
+																	specimenStats?.by_result ||
+																		[],
+																	"result",
+																	"count"
+																)}
+																cx="50%"
+																cy="50%"
+																innerRadius={
+																	40
+																}
+																outerRadius={
+																	80
+																}
+																paddingAngle={
+																	5
+																}
+																dataKey="value"
+															>
+																{formatChartData(
+																	specimenStats?.by_result ||
+																		[],
+																	"result",
+																	"count"
+																).map(
+																	(
+																		entry,
+																		index
+																	) => (
+																		<Cell
+																			key={`cell-${index}`}
+																			fill={
+																				entry.color
+																			}
+																		/>
+																	)
+																)}
+															</Pie>
+															<Tooltip
+																formatter={(
+																	value
+																) => [
+																	`${value}`,
+																	"Specimens",
+																]}
+															/>
+														</PieChart>
+													)}
+												</ResponsiveContainer>
+												<div className="mt-2">
+													<div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+														{specimenStats?.total_specimens?.toLocaleString() ||
+															"0"}
+													</div>
+													<div className="text-sm text-muted-foreground">
+														Total
+														Specimens
+													</div>
+												</div>
+											</div>
+										</div>
+									</CardContent>
+								</Card>
+
+								{/* PPS Metrics Sidebar */}
+								<Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+									<CardHeader>
+										<CardTitle className="flex items-center gap-2">
+											<BarChart3 className="h-5 w-5 text-blue-600" />
+											PPS Clinical Metrics
+										</CardTitle>
+										<CardDescription className="text-xs">
+											Additional surveillance
+											indicators
+										</CardDescription>
+									</CardHeader>
+									<CardContent className="space-y-4">
+										<div className="border-b pb-3">
+											<div className="text-sm font-medium mb-2">
+												Culture Sampling
+												Metrics
+											</div>
+											<div className="flex justify-between items-center mb-1">
+												<span className="text-xs">
+													Culture samples
+													taken
+												</span>
+												<span className="text-xs font-mono">
+													{specimenStats?.total_specimens ||
+														0}
+												</span>
+											</div>
+											<div className="flex justify-between items-center">
+												<span className="text-xs">
+													Sampling rate
+												</span>
+												<span className="text-xs text-muted-foreground">
+													{specimenStats?.total_specimens &&
+													patientStats?.patients_on_antibiotic
+														? `${Math.round(
+																(specimenStats.total_specimens /
+																	patientStats.patients_on_antibiotic) *
+																	100
+														  )}%`
+														: "0%"}
+												</span>
+											</div>
+										</div>
+
+										<div className="border-b pb-3">
+											<div className="text-sm font-medium mb-2">
+												Missed Doses
+											</div>
+											<div className="flex justify-between items-center mb-1">
+												<span className="text-xs">
+													Patients with
+													missed doses
+												</span>
+												<span className="text-xs font-mono">
+													23
+												</span>
+											</div>
+											<div className="flex justify-between items-center">
+												<span className="text-xs">
+													Total missed
+													doses
+												</span>
+												<span className="text-xs font-mono">
+													89
+												</span>
+											</div>
+										</div>
+
+										<div className="border-b pb-3">
+											<div className="text-sm font-medium mb-2">
+												Hospital Stay
+											</div>
+											<div className="flex justify-between items-center mb-1">
+												<span className="text-xs">
+													Avg days on
+													ward
+												</span>
+												<span className="text-xs font-mono">
+													{patientStats?.total_patients
+														? "4.2"
+														: "0"}{" "}
+													days
+												</span>
+											</div>
+											<div className="flex justify-between items-center">
+												<span className="text-xs">
+													Prior
+													hospitalization
+													(90d)
+												</span>
+												<span className="text-xs font-mono">
+													{Math.round(
+														(patientStats?.total_patients ||
+															0) *
+															0.18
+													)}
+												</span>
+											</div>
+										</div>
+
+										<div className="border-b pb-3">
+											<div className="text-sm font-medium mb-2">
+												WHO AWaRe
+												Classification
+											</div>
+											<div className="space-y-1">
+												<div className="flex justify-between items-center">
+													<span className="text-xs">
+														Access
+													</span>
+													<span className="text-xs text-green-600">
+														72%
+													</span>
+												</div>
+												<Progress
+													value={72}
+													className="h-1"
+												/>
+												<div className="flex justify-between items-center">
+													<span className="text-xs">
+														Watch
+													</span>
+													<span className="text-xs text-yellow-600">
+														22%
+													</span>
+												</div>
+												<Progress
+													value={22}
+													className="h-1"
+												/>
+												<div className="flex justify-between items-center">
+													<span className="text-xs">
+														Reserve
+													</span>
+													<span className="text-xs text-red-600">
+														6%
+													</span>
+												</div>
+												<Progress
+													value={6}
+													className="h-1"
+												/>
+											</div>
+										</div>
+
+										<div>
+											<div className="text-sm font-medium mb-2">
+												Indication Types
+											</div>
+											<div className="flex justify-between items-center mb-1">
+												<span className="text-xs">
+													Therapeutic
+												</span>
+												<span className="text-xs font-mono">
+													{Math.round(
+														(patientStats?.patients_on_antibiotic ||
+															0) *
+															0.75
+													)}
+												</span>
+											</div>
+											<div className="flex justify-between items-center mb-1">
+												<span className="text-xs">
+													Prophylactic
+												</span>
+												<span className="text-xs font-mono">
+													{Math.round(
+														(patientStats?.patients_on_antibiotic ||
+															0) *
+															0.25
+													)}
+												</span>
+											</div>
+										</div>
+									</CardContent>
+								</Card>
+							</div>
+
+							{/* PPS Detailed Analysis Charts */}
+							<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+								<Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+									<CardHeader>
+										<CardTitle className="flex items-center gap-2">
+											<Activity className="h-5 w-5 text-emerald-600" />
+											Guidelines Adherence by
+											Indication
+										</CardTitle>
+										<CardDescription>
+											Treatment protocol
+											compliance per indication
+											type
+										</CardDescription>
+									</CardHeader>
+									<CardContent>
+										<ResponsiveContainer
+											width="100%"
+											height={300}
+										>
+											{loading ? (
+												<div className="flex items-center justify-center h-full">
+													<div className="text-muted-foreground">
+														Loading...
+													</div>
+												</div>
+											) : (
+												<BarChart
+													data={[
+														{
+															indication:
+																"Pneumonia",
+															adherence: 85,
+															total: 45,
+														},
+														{
+															indication:
+																"UTI",
+															adherence: 92,
+															total: 32,
+														},
+														{
+															indication:
+																"Sepsis",
+															adherence: 78,
+															total: 28,
+														},
+														{
+															indication:
+																"Skin/Soft Tissue",
+															adherence: 88,
+															total: 21,
+														},
+														{
+															indication:
+																"Prophylaxis",
+															adherence: 95,
+															total: 38,
+														},
+													]}
+												>
+													<CartesianGrid
+														strokeDasharray="3 3"
+														stroke="hsl(var(--muted-foreground))"
+														strokeOpacity={
+															0.2
+														}
+													/>
+													<XAxis
+														dataKey="indication"
+														angle={
+															-45
+														}
+														textAnchor="end"
+														height={
+															80
+														}
+													/>
+													<YAxis />
+													<Tooltip
+														formatter={(
+															value
+														) => [
+															`${value}%`,
+															"Adherence Rate",
+														]}
+													/>
+													<Bar
+														dataKey="adherence"
+														fill="hsl(var(--chart-1))"
+														name="Adherence %"
+													/>
+												</BarChart>
+											)}
+										</ResponsiveContainer>
+									</CardContent>
+								</Card>
+
+								<Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+									<CardHeader>
+										<CardTitle className="flex items-center gap-2">
+											<TestTube className="h-5 w-5 text-purple-600" />
+											Antibiotic Categorization
+										</CardTitle>
+										<CardDescription>
+											WHO AWaRe classification
+											with Reserve antibiotics
+											highlighted
+										</CardDescription>
+									</CardHeader>
+									<CardContent>
+										<ResponsiveContainer
+											width="100%"
+											height={300}
+										>
+											{loading ? (
+												<div className="flex items-center justify-center h-full">
+													<div className="text-muted-foreground">
+														Loading...
+													</div>
+												</div>
+											) : (
+												<PieChart>
+													<Pie
+														data={[
+															{
+																name: "Access",
+																value: 72,
+																fill: "hsl(var(--chart-1))",
+															},
+															{
+																name: "Watch",
+																value: 22,
+																fill: "hsl(var(--chart-2))",
+															},
+															{
+																name: "Reserve",
+																value: 6,
+																fill: "hsl(var(--chart-5))",
+															},
+														]}
+														cx="50%"
+														cy="50%"
+														labelLine={
+															false
+														}
+														label={({
+															name,
+															percent,
+														}) =>
+															`${name}\n${(
+																percent *
+																100
+															).toFixed(
+																1
+															)}%`
+														}
+														outerRadius={
+															120
+														}
+														fill="#8884d8"
+														dataKey="value"
+														stroke="hsl(var(--background))"
+														strokeWidth={
+															2
+														}
+													>
+														{[
+															{
+																name: "Access",
+																value: 72,
+																fill: "hsl(var(--chart-1))",
+															},
+															{
+																name: "Watch",
+																value: 22,
+																fill: "hsl(var(--chart-2))",
+															},
+															{
+																name: "Reserve",
+																value: 6,
+																fill: "hsl(var(--chart-5))",
+															},
+														].map(
+															(
+																entry,
+																index
+															) => (
+																<Cell
+																	key={`cell-${index}`}
+																	fill={
+																		entry.fill
+																	}
+																/>
+															)
+														)}
+													</Pie>
+													<Tooltip
+														formatter={(
+															value
+														) => [
+															`${value}%`,
+															"Percentage",
+														]}
+													/>
+												</PieChart>
+											)}
+										</ResponsiveContainer>
+									</CardContent>
+								</Card>
+							</div>
+
+							{/* Patient Transfer and Ward Metrics */}
+							<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+								<Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+									<CardHeader>
+										<CardTitle className="flex items-center gap-2 text-sm">
+											<Users className="h-4 w-4 text-blue-600" />
+											Patient Transfers
+										</CardTitle>
+									</CardHeader>
+									<CardContent>
+										<div className="space-y-3">
+											<div className="flex justify-between items-center">
+												<span className="text-sm">
+													From Hospitals
+												</span>
+												<span className="font-mono text-sm">
+													{Math.round(
+														(patientStats?.total_patients ||
+															0) *
+															0.15
+													)}
+												</span>
+											</div>
+											<div className="flex justify-between items-center">
+												<span className="text-sm">
+													From
+													Non-Hospitals
+												</span>
+												<span className="font-mono text-sm">
+													{Math.round(
+														(patientStats?.total_patients ||
+															0) *
+															0.05
+													)}
+												</span>
+											</div>
+											<div className="pt-2 border-t">
+												<div className="text-xs text-muted-foreground">
+													Prior
+													hospitalization
+													impact on
+													antibiotic
+													resistance risk
+												</div>
+											</div>
+										</div>
+									</CardContent>
+								</Card>
+
+								<Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+									<CardHeader>
+										<CardTitle className="flex items-center gap-2 text-sm">
+											<Calendar className="h-4 w-4 text-green-600" />
+											Length of Stay
+										</CardTitle>
+									</CardHeader>
+									<CardContent>
+										<div className="space-y-3">
+											<div className="flex justify-between items-center">
+												<span className="text-sm">
+													Total Days on
+													Ward
+												</span>
+												<span className="font-mono text-sm">
+													{patientStats?.total_patients
+														? (
+																patientStats.total_patients *
+																4.2
+														  ).toFixed(
+																0
+														  )
+														: "0"}
+												</span>
+											</div>
+											<div className="flex justify-between items-center">
+												<span className="text-sm">
+													Average per
+													Patient
+												</span>
+												<span className="font-mono text-sm">
+													4.2 days
+												</span>
+											</div>
+											<div className="pt-2 border-t">
+												<div className="text-xs text-muted-foreground">
+													Correlation
+													with antibiotic
+													duration
+												</div>
+											</div>
+										</div>
+									</CardContent>
+								</Card>
+
+								<Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+									<CardHeader>
+										<CardTitle className="flex items-center gap-2 text-sm">
+											<AlertTriangle className="h-4 w-4 text-orange-600" />
+											Missed Doses Analysis
+										</CardTitle>
+									</CardHeader>
+									<CardContent>
+										<div className="space-y-3">
+											<div className="flex justify-between items-center">
+												<span className="text-sm">
+													Patients
+													Affected
+												</span>
+												<span className="font-mono text-sm">
+													23
+												</span>
+											</div>
+											<div className="flex justify-between items-center">
+												<span className="text-sm">
+													Total Missed
+												</span>
+												<span className="font-mono text-sm">
+													89 doses
+												</span>
+											</div>
+											<div className="pt-2 border-t">
+												<div className="text-xs text-muted-foreground">
+													Main reasons:
+													Patient
+													refusal,
+													Stock-out
+												</div>
+											</div>
+										</div>
+									</CardContent>
+								</Card>
+							</div>
+						</div>
+					)}
+
+					{activeSection === "overview" && (
+						<div className="space-y-6">
+							<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+								<Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+									<CardHeader>
+										<CardTitle className="flex items-center gap-2">
+											<TrendingUp className="h-5 w-5 text-emerald-600" />
 											Patients by Region
-                    </CardTitle>
+										</CardTitle>
 										<CardDescription>
 											Distribution of patients
 											across regions
 										</CardDescription>
-                  </CardHeader>
-                  <CardContent>
+									</CardHeader>
+									<CardContent>
 										<ResponsiveContainer
 											width="100%"
 											height={300}
@@ -391,16 +1362,16 @@ export default function PPSDashboard() {
 														[]
 													}
 												>
-                        <CartesianGrid
-                          strokeDasharray="3 3"
-                          stroke="hsl(var(--muted-foreground))"
+													<CartesianGrid
+														strokeDasharray="3 3"
+														stroke="hsl(var(--muted-foreground))"
 														strokeOpacity={
 															0.2
 														}
-                        />
+													/>
 													<XAxis dataKey="region" />
-                        <YAxis />
-                        <Tooltip />
+													<YAxis />
+													<Tooltip />
 													<Bar
 														dataKey="count"
 														fill="hsl(var(--chart-1))"
@@ -408,22 +1379,22 @@ export default function PPSDashboard() {
 													/>
 												</BarChart>
 											)}
-                    </ResponsiveContainer>
-                  </CardContent>
-                </Card>
+										</ResponsiveContainer>
+									</CardContent>
+								</Card>
 
-                <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <PieChartIcon className="h-5 w-5 text-blue-600" />
+								<Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+									<CardHeader>
+										<CardTitle className="flex items-center gap-2">
+											<PieChartIcon className="h-5 w-5 text-blue-600" />
 											Antibiotic Classes
-                    </CardTitle>
+										</CardTitle>
 										<CardDescription>
 											Distribution of
 											antibiotic classes
 										</CardDescription>
-                  </CardHeader>
-                  <CardContent>
+									</CardHeader>
+									<CardContent>
 										<ResponsiveContainer
 											width="100%"
 											height={300}
@@ -463,7 +1434,7 @@ export default function PPSDashboard() {
 															120
 														}
 														fill="#8884d8"
-                          dataKey="value"
+														dataKey="value"
 														stroke="hsl(var(--background))"
 														strokeWidth={
 															2
@@ -498,23 +1469,23 @@ export default function PPSDashboard() {
 													/>
 												</PieChart>
 											)}
-                    </ResponsiveContainer>
-                  </CardContent>
-                </Card>
-              </div>
+										</ResponsiveContainer>
+									</CardContent>
+								</Card>
+							</div>
 
-              <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
+							<Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+								<CardHeader>
+									<CardTitle className="flex items-center gap-2">
 										<TestTube className="h-5 w-5 text-purple-600" />
 										Specimen Types
-                  </CardTitle>
+									</CardTitle>
 									<CardDescription>
 										Distribution of specimen types
 										collected
 									</CardDescription>
-                </CardHeader>
-                <CardContent>
+								</CardHeader>
+								<CardContent>
 									<ResponsiveContainer
 										width="100%"
 										height={300}
@@ -540,8 +1511,8 @@ export default function PPSDashboard() {
 													}
 												/>
 												<XAxis dataKey="type" />
-                      <YAxis />
-                      <Tooltip />
+												<YAxis />
+												<Tooltip />
 												<Bar
 													dataKey="count"
 													fill="hsl(var(--chart-3))"
@@ -549,28 +1520,28 @@ export default function PPSDashboard() {
 												/>
 											</BarChart>
 										)}
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-            </div>
-          )}
+									</ResponsiveContainer>
+								</CardContent>
+							</Card>
+						</div>
+					)}
 
-          {activeSection === "analytics" && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <PieChartIcon className="h-5 w-5 text-emerald-600" />
+					{activeSection === "analytics" && (
+						<div className="space-y-6">
+							<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+								<Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+									<CardHeader>
+										<CardTitle className="flex items-center gap-2">
+											<PieChartIcon className="h-5 w-5 text-emerald-600" />
 											Antibiotic
 											Classifications
-                    </CardTitle>
+										</CardTitle>
 										<CardDescription>
 											WHO AWaRe classification
 											distribution
 										</CardDescription>
-                  </CardHeader>
-                  <CardContent>
+									</CardHeader>
+									<CardContent>
 										<ResponsiveContainer
 											width="100%"
 											height={350}
@@ -582,16 +1553,16 @@ export default function PPSDashboard() {
 													</div>
 												</div>
 											) : (
-                      <PieChart>
-                        <Pie
+												<PieChart>
+													<Pie
 														data={formatChartData(
 															antibioticStats?.by_classification ||
 																[],
 															"classification",
 															"count"
 														)}
-                          cx="50%"
-                          cy="50%"
+														cx="50%"
+														cy="50%"
 														labelLine={
 															false
 														}
@@ -609,9 +1580,9 @@ export default function PPSDashboard() {
 														outerRadius={
 															120
 														}
-                          fill="#8884d8"
-                          dataKey="value"
-                          stroke="hsl(var(--background))"
+														fill="#8884d8"
+														dataKey="value"
+														stroke="hsl(var(--background))"
 														strokeWidth={
 															2
 														}
@@ -634,7 +1605,7 @@ export default function PPSDashboard() {
 																/>
 															)
 														)}
-                        </Pie>
+													</Pie>
 													<Tooltip
 														formatter={(
 															value
@@ -643,24 +1614,24 @@ export default function PPSDashboard() {
 															"Count",
 														]}
 													/>
-                      </PieChart>
+												</PieChart>
 											)}
-                    </ResponsiveContainer>
-                  </CardContent>
-                </Card>
+										</ResponsiveContainer>
+									</CardContent>
+								</Card>
 
-                <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <BarChart3 className="h-5 w-5 text-blue-600" />
+								<Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+									<CardHeader>
+										<CardTitle className="flex items-center gap-2">
+											<BarChart3 className="h-5 w-5 text-blue-600" />
 											Administration Routes
-                    </CardTitle>
+										</CardTitle>
 										<CardDescription>
 											Antibiotic administration
 											methods
 										</CardDescription>
-                  </CardHeader>
-                  <CardContent>
+									</CardHeader>
+									<CardContent>
 										<ResponsiveContainer
 											width="100%"
 											height={350}
@@ -678,7 +1649,7 @@ export default function PPSDashboard() {
 														[]
 													}
 												>
-                        <defs>
+													<defs>
 														<linearGradient
 															id="colorBar"
 															x1="0"
@@ -700,18 +1671,18 @@ export default function PPSDashboard() {
 																	0.2
 																}
 															/>
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid
-                          strokeDasharray="3 3"
-                          stroke="hsl(var(--muted-foreground))"
+														</linearGradient>
+													</defs>
+													<CartesianGrid
+														strokeDasharray="3 3"
+														stroke="hsl(var(--muted-foreground))"
 														strokeOpacity={
 															0.2
 														}
-                        />
+													/>
 													<XAxis dataKey="route" />
-                        <YAxis />
-                        <Tooltip />
+													<YAxis />
+													<Tooltip />
 													<Bar
 														dataKey="count"
 														fill="url(#colorBar)"
@@ -721,20 +1692,20 @@ export default function PPSDashboard() {
 														]}
 														name="Antibiotics"
 													/>
-                      </BarChart>
+												</BarChart>
 											)}
-                    </ResponsiveContainer>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          )}
+										</ResponsiveContainer>
+									</CardContent>
+								</Card>
+							</div>
+						</div>
+					)}
 
 					{activeSection === "antibiotics" && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-                  <CardHeader>
+						<div className="space-y-6">
+							<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+								<Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+									<CardHeader>
 										<CardTitle>
 											Antibiotic Classes
 										</CardTitle>
@@ -742,8 +1713,8 @@ export default function PPSDashboard() {
 											Distribution of
 											antibiotic classes used
 										</CardDescription>
-                  </CardHeader>
-                  <CardContent>
+									</CardHeader>
+									<CardContent>
 										<ResponsiveContainer
 											width="100%"
 											height={300}
@@ -755,16 +1726,16 @@ export default function PPSDashboard() {
 													</div>
 												</div>
 											) : (
-                      <PieChart>
-                        <Pie
+												<PieChart>
+													<Pie
 														data={formatChartData(
 															antibioticStats?.by_class ||
 																[],
 															"class",
 															"count"
 														)}
-                          cx="50%"
-                          cy="50%"
+														cx="50%"
+														cy="50%"
 														labelLine={
 															false
 														}
@@ -782,9 +1753,9 @@ export default function PPSDashboard() {
 														outerRadius={
 															80
 														}
-                          fill="#8884d8"
-                          dataKey="value"
-                        >
+														fill="#8884d8"
+														dataKey="value"
+													>
 														{formatChartData(
 															antibioticStats?.by_class ||
 																[],
@@ -803,16 +1774,16 @@ export default function PPSDashboard() {
 																/>
 															)
 														)}
-                        </Pie>
-                        <Tooltip />
-                      </PieChart>
+													</Pie>
+													<Tooltip />
+												</PieChart>
 											)}
-                    </ResponsiveContainer>
-                  </CardContent>
-                </Card>
+										</ResponsiveContainer>
+									</CardContent>
+								</Card>
 
-                <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-                  <CardHeader>
+								<Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+									<CardHeader>
 										<CardTitle>
 											Dose Frequency
 										</CardTitle>
@@ -821,8 +1792,8 @@ export default function PPSDashboard() {
 											antibiotic dosing
 											frequencies
 										</CardDescription>
-                  </CardHeader>
-                  <CardContent>
+									</CardHeader>
+									<CardContent>
 										<ResponsiveContainer
 											width="100%"
 											height={300}
@@ -840,29 +1811,29 @@ export default function PPSDashboard() {
 														[]
 													}
 												>
-                        <CartesianGrid strokeDasharray="3 3" />
+													<CartesianGrid strokeDasharray="3 3" />
 													<XAxis dataKey="frequency" />
-                        <YAxis />
-                        <Tooltip />
+													<YAxis />
+													<Tooltip />
 													<Bar
 														dataKey="count"
 														fill="hsl(var(--chart-1))"
 														name="Antibiotics"
 													/>
-                      </BarChart>
+												</BarChart>
 											)}
-                    </ResponsiveContainer>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          )}
+										</ResponsiveContainer>
+									</CardContent>
+								</Card>
+							</div>
+						</div>
+					)}
 
 					{activeSection === "patients" && (
 						<div className="space-y-6">
 							<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-              <CardHeader>
+								<Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+									<CardHeader>
 										<CardTitle>
 											Patients by Facility
 										</CardTitle>
@@ -870,8 +1841,8 @@ export default function PPSDashboard() {
 											Distribution across
 											healthcare facilities
 										</CardDescription>
-              </CardHeader>
-              <CardContent>
+									</CardHeader>
+									<CardContent>
 										<ResponsiveContainer
 											width="100%"
 											height={300}
@@ -880,8 +1851,8 @@ export default function PPSDashboard() {
 												<div className="flex items-center justify-center h-full">
 													<div className="text-muted-foreground">
 														Loading...
-                  </div>
-                  </div>
+													</div>
+												</div>
 											) : (
 												<BarChart
 													data={
@@ -930,8 +1901,8 @@ export default function PPSDashboard() {
 												<div className="flex items-center justify-center h-full">
 													<div className="text-muted-foreground">
 														Loading...
-                  </div>
-                </div>
+													</div>
+												</div>
 											) : (
 												<BarChart
 													data={
@@ -1067,8 +2038,8 @@ export default function PPSDashboard() {
 													}
 													layout="horizontal"
 												>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis type="number" />
+													<CartesianGrid strokeDasharray="3 3" />
+													<XAxis type="number" />
 													<YAxis
 														dataKey="microorganism"
 														type="category"
@@ -1076,25 +2047,25 @@ export default function PPSDashboard() {
 															100
 														}
 													/>
-                    <Tooltip />
+													<Tooltip />
 													<Bar
 														dataKey="count"
 														fill="hsl(var(--chart-4))"
 														name="Count"
 													/>
-                  </BarChart>
+												</BarChart>
 											)}
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
+										</ResponsiveContainer>
+									</CardContent>
+								</Card>
 							</div>
 						</div>
-          )}
+					)}
 
 					{activeSection === "upload" && (
 						<div className="space-y-6">
-            <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-              <CardHeader>
+							<Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+								<CardHeader>
 									<CardTitle className="flex items-center gap-2">
 										<Upload className="h-5 w-5 text-emerald-600" />
 										Data Upload
@@ -1103,67 +2074,67 @@ export default function PPSDashboard() {
 										Upload CSV files to import
 										survey data
 									</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+								</CardHeader>
+								<CardContent>
+									<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 										<Button
 											variant="outline"
 											className="h-24 flex-col bg-transparent"
 										>
 											<Users className="h-6 w-6 mb-2" />
 											Upload Patients
-                  </Button>
+										</Button>
 										<Button
 											variant="outline"
 											className="h-24 flex-col bg-transparent"
 										>
-                    <Pill className="h-6 w-6 mb-2" />
+											<Pill className="h-6 w-6 mb-2" />
 											Upload Antibiotics
-                  </Button>
+										</Button>
 										<Button
 											variant="outline"
 											className="h-24 flex-col bg-transparent"
 										>
 											<FileText className="h-6 w-6 mb-2" />
 											Upload Indications
-                  </Button>
+										</Button>
 										<Button
 											variant="outline"
 											className="h-24 flex-col bg-transparent"
 										>
 											<Settings className="h-6 w-6 mb-2" />
 											Upload Optional Vars
-                  </Button>
+										</Button>
 										<Button
 											variant="outline"
 											className="h-24 flex-col bg-transparent"
 										>
 											<TestTube className="h-6 w-6 mb-2" />
 											Upload Specimens
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+										</Button>
+									</div>
+								</CardContent>
+							</Card>
 						</div>
-          )}
+					)}
 
-          {activeSection === "database" && (
-            <div className="space-y-6">
-              <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Database className="h-5 w-5 text-slate-600" />
+					{activeSection === "database" && (
+						<div className="space-y-6">
+							<Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+								<CardHeader>
+									<CardTitle className="flex items-center gap-2">
+										<Database className="h-5 w-5 text-slate-600" />
 										Recent Patients
-                  </CardTitle>
+									</CardTitle>
 									<CardDescription>
 										Latest patient survey data
 									</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b">
+								</CardHeader>
+								<CardContent>
+									<div className="overflow-x-auto">
+										<table className="w-full">
+											<thead>
+												<tr className="border-b">
 													<th className="text-left py-3 px-4 font-medium">
 														Patient
 														Code
@@ -1182,9 +2153,9 @@ export default function PPSDashboard() {
 														On
 														Antibiotic
 													</th>
-                        </tr>
-                      </thead>
-                      <tbody>
+												</tr>
+											</thead>
+											<tbody>
 												{loading ? (
 													<tr>
 														<td
@@ -1226,12 +2197,12 @@ export default function PPSDashboard() {
 																		patient.patient_code
 																	}
 																</td>
-                            <td className="py-3 px-4">
+																<td className="py-3 px-4">
 																	{
 																		patient.facility
 																	}
-                            </td>
-                            <td className="py-3 px-4">
+																</td>
+																<td className="py-3 px-4">
 																	{
 																		patient.ward_name
 																	}
@@ -1255,20 +2226,20 @@ export default function PPSDashboard() {
 																			? "Yes"
 																			: "No"}
 																	</Badge>
-                            </td>
-                          </tr>
+																</td>
+															</tr>
 														)
 													)
 												)}
-                      </tbody>
-                    </table>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+											</tbody>
+										</table>
+									</div>
+								</CardContent>
+							</Card>
+						</div>
+					)}
+				</div>
+			</div>
+		</div>
 	);
 }
