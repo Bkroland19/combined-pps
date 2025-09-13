@@ -1689,7 +1689,7 @@ export default function PPSDashboard() {
 													/>
 													<Bar
 														dataKey="adherence"
-														fill="hsl(var(--chart-1))"
+														fill="#10b981"
 														name="Adherence %"
 													/>
 												</BarChart>
@@ -1711,103 +1711,90 @@ export default function PPSDashboard() {
 										</CardDescription>
 									</CardHeader>
 									<CardContent>
-										<ResponsiveContainer
-											width="100%"
-											height={300}
-										>
-											{loading ? (
-												<div className="flex items-center justify-center h-full">
-													<div className="text-muted-foreground">
-														Loading...
-													</div>
+										{loading ? (
+											<div className="flex items-center justify-center h-full">
+												<div className="text-muted-foreground">
+													Loading...
 												</div>
-											) : (
-												<PieChart>
-													<Pie
-														data={[
-															{
-																name: "Access",
-																value: 72,
-																fill: "hsl(var(--chart-1))",
-															},
-															{
-																name: "Watch",
-																value: 22,
-																fill: "hsl(var(--chart-2))",
-															},
-															{
-																name: "Reserve",
-																value: 6,
-																fill: "hsl(var(--chart-5))",
-															},
-														]}
-														cx="50%"
-														cy="50%"
-														labelLine={
-															false
-														}
-														label={({
-															name,
-															percent,
-														}: any) =>
-															`${name}\n${(
-																percent *
-																100
-															).toFixed(
-																1
-															)}%`
-														}
-														outerRadius={
-															120
-														}
-														fill="#8884d8"
-														dataKey="value"
-														stroke="hsl(var(--background))"
-														strokeWidth={
-															2
-														}
-													>
-														{[
-															{
-																name: "Access",
-																value: 72,
-																fill: "hsl(var(--chart-1))",
-															},
-															{
-																name: "Watch",
-																value: 22,
-																fill: "hsl(var(--chart-2))",
-															},
-															{
-																name: "Reserve",
-																value: 6,
-																fill: "hsl(var(--chart-5))",
-															},
-														].map(
-															(
-																entry,
-																index
-															) => (
-																<Cell
-																	key={`cell-${index}`}
-																	fill={
-																		entry.fill
-																	}
-																/>
-															)
-														)}
-													</Pie>
-													<Tooltip
-														formatter={(
-															value
-														) => [
-															`${value}%`,
-															"Percentage",
-														]}
-													/>
-												</PieChart>
-											)}
-										</ResponsiveContainer>
+											</div>
+										) : (
+											<div className="grid grid-cols-2 gap-4">
+												{/* Access */}
+												<Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/50 dark:to-green-900/50 border-green-200/50 dark:border-green-800/50">
+													<CardContent className="p-4">
+														<div className="text-center">
+															<div className="text-2xl font-bold text-green-700 dark:text-green-300">
+																72%
+															</div>
+															<div className="text-sm font-medium text-green-600 dark:text-green-400 mt-1">
+																Access
+															</div>
+															<div className="text-xs text-green-500 dark:text-green-500 mt-1">
+																First
+																choice
+																antibiotics
+															</div>
+														</div>
+													</CardContent>
+												</Card>
+
+												{/* Watch */}
+												<Card className="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950/50 dark:to-amber-900/50 border-amber-200/50 dark:border-amber-800/50">
+													<CardContent className="p-4">
+														<div className="text-center">
+															<div className="text-2xl font-bold text-amber-700 dark:text-amber-300">
+																22%
+															</div>
+															<div className="text-sm font-medium text-amber-600 dark:text-amber-400 mt-1">
+																Watch
+															</div>
+															<div className="text-xs text-amber-500 dark:text-amber-500 mt-1">
+																Second
+																choice
+																antibiotics
+															</div>
+														</div>
+													</CardContent>
+												</Card>
+
+												{/* Reserve */}
+												<Card className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950/50 dark:to-red-900/50 border-red-200/50 dark:border-red-800/50">
+													<CardContent className="p-4">
+														<div className="text-center">
+															<div className="text-2xl font-bold text-red-700 dark:text-red-300">
+																6%
+															</div>
+															<div className="text-sm font-medium text-red-600 dark:text-red-400 mt-1">
+																Reserve
+															</div>
+															<div className="text-xs text-red-500 dark:text-red-500 mt-1">
+																Last
+																resort
+																antibiotics
+															</div>
+														</div>
+													</CardContent>
+												</Card>
+
+												{/* Unclassified */}
+												<Card className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-950/50 dark:to-gray-900/50 border-gray-200/50 dark:border-gray-800/50">
+													<CardContent className="p-4">
+														<div className="text-center">
+															<div className="text-2xl font-bold text-gray-700 dark:text-gray-300">
+																0%
+															</div>
+															<div className="text-sm font-medium text-gray-600 dark:text-gray-400 mt-1">
+																Unclassified
+															</div>
+															<div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+																Not
+																categorized
+															</div>
+														</div>
+													</CardContent>
+												</Card>
+											</div>
+										)}
 									</CardContent>
 								</Card>
 							</div>
