@@ -11,6 +11,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+import {
 	BarChart,
 	Bar,
 	LineChart,
@@ -54,7 +61,6 @@ import {
 	Target,
 	Award,
 	Globe,
-	Filter,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import {
@@ -64,13 +70,6 @@ import {
 	SpecimenStats,
 	Patient,
 } from "@/lib/api";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
 
 // Data transformation utilities
 const formatChartData = (
@@ -104,81 +103,93 @@ export default function PPSDashboard() {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 
-	// Dropdown filters
-	const [selectedRegion, setSelectedRegion] = useState<string>("");
-	const [selectedDistrict, setSelectedDistrict] = useState<string>("");
-	const [selectedFacility, setSelectedFacility] = useState<string>("");
+	// Cascading filter state
+	const [selectedRegion, setSelectedRegion] = useState<string>("all");
+	const [selectedDistrict, setSelectedDistrict] = useState<string>("all");
+	const [selectedSubCounty, setSelectedSubCounty] = useState<string>("all");
+	const [selectedFacility, setSelectedFacility] = useState<string>("all");
 
-	// Hierarchical data structure
-	const regionData = {
-		central: ["kampala", "wakiso", "mukono", "mubende", "luwero"],
-		eastern: ["mbale", "jinja", "soroti", "tororo", "busia"],
-		northern: ["gulu", "lira", "arua", "kitgum", "pader"],
-		western: ["mbarara", "hoima", "kasese", "kabale", "bundibugyo"],
+	// Get unique filter options from patient data
+	const getFilterOptions = () => {
+		const regions = [...new Set(allPatients.map((p) => p.region))]
+			.filter(Boolean)
+			.sort();
+
+		const districts = selectedRegion
+			? [
+					...new Set(
+						allPatients
+							.filter((p) => p.region === selectedRegion)
+							.map((p) => p.district)
+					),
+			  ]
+					.filter(Boolean)
+					.sort()
+			: [];
+
+		const subCounties = selectedDistrict
+			? [
+					...new Set(
+						allPatients
+							.filter(
+								(p) =>
+									p.region === selectedRegion &&
+									p.district === selectedDistrict
+							)
+							.map((p) => p.subcounty)
+					),
+			  ]
+					.filter(Boolean)
+					.sort()
+			: [];
+
+		const facilities = selectedSubCounty
+			? [
+					...new Set(
+						allPatients
+							.filter(
+								(p) =>
+									p.region === selectedRegion &&
+									p.district === selectedDistrict &&
+									p.subcounty === selectedSubCounty
+							)
+							.map((p) => p.facility)
+					),
+			  ]
+					.filter(Boolean)
+					.sort()
+			: [];
+
+		return { regions, districts, subCounties, facilities };
 	};
 
-	const facilityTypes = [
-		"Regional Hospital",
-		"District Hospital",
-		"Health Centre IV",
-		"Health Centre III",
-		"Health Centre II",
-		"Private Clinic",
-		"Mission Hospital",
-		"Specialized Hospital",
-	];
-
-	// Reset dependent selections when parent changes
-	const handleRegionChange = (region: string) => {
-		setSelectedRegion(region);
-		setSelectedDistrict("");
-		setSelectedFacility("");
-	};
-
-	const handleDistrictChange = (district: string) => {
-		setSelectedDistrict(district);
-		setSelectedFacility("");
-	};
-
-	// Filter patients based on selections - only filter if filters are actually selected
+	// Filter patients based on selections
 	const getFilteredPatients = () => {
-		// If no filters are selected, return all patients
-		if (!selectedRegion && !selectedDistrict && !selectedFacility) {
-			return allPatients;
-		}
-
 		return allPatients.filter((patient) => {
-			// Apply region filter
 			if (
 				selectedRegion &&
 				selectedRegion !== "all" &&
-				patient.region.toLowerCase() !==
-					selectedRegion.toLowerCase()
-			) {
+				patient.region !== selectedRegion
+			)
 				return false;
-			}
-
-			// Apply district filter
 			if (
 				selectedDistrict &&
 				selectedDistrict !== "all" &&
-				patient.district.toLowerCase() !==
-					selectedDistrict.toLowerCase()
-			) {
+				patient.district !== selectedDistrict
+			)
 				return false;
-			}
-
-			// Apply facility filter (search in facility name)
+			if (
+				selectedSubCounty &&
+				selectedSubCounty !== "all" &&
+				patient.subcounty !== selectedSubCounty
+			)
+				return false;
 			if (
 				selectedFacility &&
 				selectedFacility !== "all" &&
-				!patient.facility
-					.toLowerCase()
-					.includes(selectedFacility.toLowerCase())
-			) {
+				patient.facility !== selectedFacility
+			)
 				return false;
-			}
-
 			return true;
 		});
 	};
@@ -191,7 +202,6 @@ export default function PPSDashboard() {
 			(p) => p.patient_on_antibiotic === "yes"
 		).length;
 
-		// Group by region
 		const byRegion = filteredPatients.reduce((acc, patient) => {
 			const region = patient.region;
 			const existing = acc.find((item) => item.region === region);
@@ -203,7 +213,6 @@ export default function PPSDashboard() {
 			return acc;
 		}, [] as Array<{ region: string; count: number }>);
 
-		// Group by facility
 		const byFacility = filteredPatients.reduce((acc, patient) => {
 			const facility = patient.facility;
 			const existing = acc.find((item) => item.facility === facility);
@@ -215,7 +224,6 @@ export default function PPSDashboard() {
 			return acc;
 		}, [] as Array<{ facility: string; count: number }>);
 
-		// Group by ward
 		const byWard = filteredPatients.reduce((acc, patient) => {
 			const ward = patient.ward_name;
 			const existing = acc.find((item) => item.ward === ward);
@@ -236,7 +244,7 @@ export default function PPSDashboard() {
 		};
 	};
 
-	// Fetch data on component mount and when search filters change
+	// Fetch data on component mount
 	useEffect(() => {
 		const fetchData = async () => {
 			try {
@@ -252,14 +260,14 @@ export default function PPSDashboard() {
 					PPSApi.getPatientStats(),
 					PPSApi.getAntibioticStats(),
 					PPSApi.getSpecimenStats(),
-					PPSApi.getPatients(), // Get all patients for filtering
+					PPSApi.getPatients({ limit: 999999 }), // Get all patients for filtering
 				]);
 
 				setPatientStats(patientStatsRes);
 				setAntibioticStats(antibioticStatsRes);
 				setSpecimenStats(specimenStatsRes);
 				setAllPatients(allPatientsRes.data);
-				setRecentPatients(allPatientsRes.data); // Show all patients
+				setRecentPatients(allPatientsRes.data.slice(0, 10));
 			} catch (err) {
 				console.error("Error fetching data:", err);
 				setError(
@@ -272,6 +280,25 @@ export default function PPSDashboard() {
 
 		fetchData();
 	}, []);
+
+	// Reset dependent dropdowns when parent changes
+	const handleRegionChange = (region: string) => {
+		setSelectedRegion(region);
+		setSelectedDistrict("all");
+		setSelectedSubCounty("all");
+		setSelectedFacility("all");
+	};
+
+	const handleDistrictChange = (district: string) => {
+		setSelectedDistrict(district);
+		setSelectedSubCounty("all");
+		setSelectedFacility("all");
+	};
+
+	const handleSubCountyChange = (subCounty: string) => {
+		setSelectedSubCounty(subCounty);
+		setSelectedFacility("all");
+	};
 
 	// Get current filtered data for display
 	const filteredStats = getFilteredStats();
@@ -381,7 +408,7 @@ export default function PPSDashboard() {
 							</div>
 
 							<div className="flex items-center gap-3">
-								{/* Stepwise Dropdown Filters */}
+								{/* Cascading Filter Dropdowns */}
 								<div className="flex items-center gap-2">
 									{/* Region Dropdown */}
 									<Select
@@ -391,137 +418,166 @@ export default function PPSDashboard() {
 										}
 									>
 										<SelectTrigger className="w-36">
-											<SelectValue placeholder="Select Region" />
+											<SelectValue placeholder="Region" />
 										</SelectTrigger>
 										<SelectContent>
 											<SelectItem value="all">
 												All Regions
 											</SelectItem>
-											<SelectItem value="central">
-												Central
-											</SelectItem>
-											<SelectItem value="eastern">
-												Eastern
-											</SelectItem>
-											<SelectItem value="northern">
-												Northern
-											</SelectItem>
-											<SelectItem value="western">
-												Western
-											</SelectItem>
+											{getFilterOptions().regions.map(
+												(region) => (
+													<SelectItem
+														key={
+															region
+														}
+														value={
+															region
+														}
+													>
+														{region}
+													</SelectItem>
+												)
+											)}
 										</SelectContent>
 									</Select>
 
-									{/* District Dropdown - only show if region is selected */}
-									{selectedRegion &&
-										selectedRegion !== "all" && (
-											<Select
-												value={
-													selectedDistrict
-												}
-												onValueChange={
-													handleDistrictChange
-												}
-											>
-												<SelectTrigger className="w-36">
-													<SelectValue placeholder="Select District" />
-												</SelectTrigger>
-												<SelectContent>
-													<SelectItem value="all">
-														All
-														Districts
-													</SelectItem>
-													{regionData[
-														selectedRegion as keyof typeof regionData
-													]?.map(
-														(
-															district
-														) => (
-															<SelectItem
-																key={
-																	district
-																}
-																value={
-																	district
-																}
-															>
-																{district
-																	.charAt(
-																		0
-																	)
-																	.toUpperCase() +
-																	district.slice(
-																		1
-																	)}
-															</SelectItem>
-														)
-													)}
-												</SelectContent>
-											</Select>
-										)}
+									{/* District Dropdown */}
+									{selectedRegion && (
+										<Select
+											value={selectedDistrict}
+											onValueChange={
+												handleDistrictChange
+											}
+										>
+											<SelectTrigger className="w-36">
+												<SelectValue placeholder="District" />
+											</SelectTrigger>
+											<SelectContent>
+												<SelectItem value="all">
+													All Districts
+												</SelectItem>
+												{getFilterOptions().districts.map(
+													(district) => (
+														<SelectItem
+															key={
+																district
+															}
+															value={
+																district
+															}
+														>
+															{
+																district
+															}
+														</SelectItem>
+													)
+												)}
+											</SelectContent>
+										</Select>
+									)}
 
-									{/* Facility Type Dropdown - only show if district is selected */}
-									{selectedDistrict &&
-										selectedDistrict !==
-											"all" && (
-											<Select
-												value={
-													selectedFacility
-												}
-												onValueChange={
-													setSelectedFacility
-												}
-											>
-												<SelectTrigger className="w-44">
-													<SelectValue placeholder="Select Facility Type" />
-												</SelectTrigger>
-												<SelectContent>
-													<SelectItem value="all">
-														All
-														Facility
-														Types
-													</SelectItem>
-													{facilityTypes.map(
-														(
-															facility
-														) => (
-															<SelectItem
-																key={
-																	facility
-																}
-																value={
-																	facility
-																}
-															>
-																{
-																	facility
-																}
-															</SelectItem>
-														)
-													)}
-												</SelectContent>
-											</Select>
-										)}
+									{/* Sub County Dropdown */}
+									{selectedDistrict && (
+										<Select
+											value={selectedSubCounty}
+											onValueChange={
+												handleSubCountyChange
+											}
+										>
+											<SelectTrigger className="w-36">
+												<SelectValue placeholder="Sub County" />
+											</SelectTrigger>
+											<SelectContent>
+												<SelectItem value="all">
+													All Sub
+													Counties
+												</SelectItem>
+												{getFilterOptions().subCounties.map(
+													(
+														subCounty
+													) => (
+														<SelectItem
+															key={
+																subCounty
+															}
+															value={
+																subCounty
+															}
+														>
+															{
+																subCounty
+															}
+														</SelectItem>
+													)
+												)}
+											</SelectContent>
+										</Select>
+									)}
 
-									{/* Clear Filters Button */}
-									{(selectedRegion ||
-										selectedDistrict ||
-										selectedFacility) && (
+									{/* Facility Dropdown */}
+									{selectedSubCounty && (
+										<Select
+											value={selectedFacility}
+											onValueChange={
+												setSelectedFacility
+											}
+										>
+											<SelectTrigger className="w-44">
+												<SelectValue placeholder="Facility" />
+											</SelectTrigger>
+											<SelectContent>
+												<SelectItem value="all">
+													All Facilities
+												</SelectItem>
+												{getFilterOptions().facilities.map(
+													(facility) => (
+														<SelectItem
+															key={
+																facility
+															}
+															value={
+																facility
+															}
+														>
+															{
+																facility
+															}
+														</SelectItem>
+													)
+												)}
+											</SelectContent>
+										</Select>
+									)}
+
+									{/* Clear Filters */}
+									{((selectedRegion &&
+										selectedRegion !== "all") ||
+										(selectedDistrict &&
+											selectedDistrict !==
+												"all") ||
+										(selectedSubCounty &&
+											selectedSubCounty !==
+												"all") ||
+										(selectedFacility &&
+											selectedFacility !==
+												"all")) && (
 										<Button
 											variant="outline"
 											size="sm"
 											onClick={() => {
 												setSelectedRegion(
-													""
+													"all"
 												);
 												setSelectedDistrict(
-													""
+													"all"
+												);
+												setSelectedSubCounty(
+													"all"
 												);
 												setSelectedFacility(
-													""
+													"all"
 												);
 											}}
-											className="text-slate-600 hover:text-slate-700"
 										>
 											Clear
 										</Button>
@@ -553,13 +609,17 @@ export default function PPSDashboard() {
 					)}
 
 					{/* Filter Status */}
-					{(selectedRegion ||
-						selectedDistrict ||
-						selectedFacility) && (
+					{((selectedRegion && selectedRegion !== "all") ||
+						(selectedDistrict &&
+							selectedDistrict !== "all") ||
+						(selectedSubCounty &&
+							selectedSubCounty !== "all") ||
+						(selectedFacility &&
+							selectedFacility !== "all")) && (
 						<div className="mb-6 p-4 bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 rounded-lg">
 							<div className="flex items-center justify-between">
 								<div className="flex items-center gap-2">
-									<Filter className="h-4 w-4 text-blue-600" />
+									<Search className="h-4 w-4 text-blue-600" />
 									<span className="text-sm font-medium text-blue-700 dark:text-blue-300">
 										Active filters:
 									</span>
@@ -590,6 +650,19 @@ export default function PPSDashboard() {
 													}
 												</Badge>
 											)}
+										{selectedSubCounty &&
+											selectedSubCounty !==
+												"all" && (
+												<Badge
+													variant="secondary"
+													className="bg-yellow-100 text-yellow-700"
+												>
+													Sub County:{" "}
+													{
+														selectedSubCounty
+													}
+												</Badge>
+											)}
 										{selectedFacility &&
 											selectedFacility !==
 												"all" && (
@@ -609,9 +682,10 @@ export default function PPSDashboard() {
 									variant="ghost"
 									size="sm"
 									onClick={() => {
-										setSelectedRegion("");
-										setSelectedDistrict("");
-										setSelectedFacility("");
+										setSelectedRegion("all");
+										setSelectedDistrict("all");
+										setSelectedSubCounty("all");
+										setSelectedFacility("all");
 									}}
 									className="text-blue-600 hover:text-blue-700"
 								>
@@ -2535,54 +2609,59 @@ export default function PPSDashboard() {
 														</td>
 													</tr>
 												) : (
-													filteredPatients.map(
-														(
-															patient
-														) => (
-															<tr
-																key={
-																	patient.id
-																}
-																className="border-b hover:bg-muted/50"
-															>
-																<td className="py-3 px-4 font-mono text-sm">
-																	{
-																		patient.patient_code
-																	}
-																</td>
-																<td className="py-3 px-4">
-																	{
-																		patient.facility
-																	}
-																</td>
-																<td className="py-3 px-4">
-																	{
-																		patient.ward_name
-																	}
-																</td>
-																<td className="py-3 px-4 text-muted-foreground">
-																	{new Date(
-																		patient.survey_date
-																	).toLocaleDateString()}
-																</td>
-																<td className="py-3 px-4">
-																	<Badge
-																		variant={
-																			patient.patient_on_antibiotic ===
-																			"yes"
-																				? "default"
-																				: "secondary"
-																		}
-																	>
-																		{patient.patient_on_antibiotic ===
-																		"yes"
-																			? "Yes"
-																			: "No"}
-																	</Badge>
-																</td>
-															</tr>
+													filteredPatients
+														.slice(
+															0,
+															10
 														)
-													)
+														.map(
+															(
+																patient
+															) => (
+																<tr
+																	key={
+																		patient.id
+																	}
+																	className="border-b hover:bg-muted/50"
+																>
+																	<td className="py-3 px-4 font-mono text-sm">
+																		{
+																			patient.patient_code
+																		}
+																	</td>
+																	<td className="py-3 px-4">
+																		{
+																			patient.facility
+																		}
+																	</td>
+																	<td className="py-3 px-4">
+																		{
+																			patient.ward_name
+																		}
+																	</td>
+																	<td className="py-3 px-4 text-muted-foreground">
+																		{new Date(
+																			patient.survey_date
+																		).toLocaleDateString()}
+																	</td>
+																	<td className="py-3 px-4">
+																		<Badge
+																			variant={
+																				patient.patient_on_antibiotic ===
+																				"yes"
+																					? "default"
+																					: "secondary"
+																			}
+																		>
+																			{patient.patient_on_antibiotic ===
+																			"yes"
+																				? "Yes"
+																				: "No"}
+																		</Badge>
+																	</td>
+																</tr>
+															)
+														)
 												)}
 											</tbody>
 										</table>
