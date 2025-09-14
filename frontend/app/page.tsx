@@ -999,157 +999,25 @@ export default function PPSDashboard() {
                 </Card>
               </div>
 
-              {/* Main Dashboard Visualizations */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Central Donut Chart - Main Visual */}
-                <Card className="lg:col-span-2 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Activity className="h-6 w-6 text-emerald-600" />
-                      Point Prevalence Survey Overview
-                    </CardTitle>
-                    <CardDescription>
-                      Comprehensive antimicrobial usage surveillance data
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      {/* Patients Donut Chart */}
-                      <div className="text-center">
-                        <h4 className="text-lg font-semibold mb-4 text-slate-700 dark:text-slate-300">
-                          Patient Distribution
-                        </h4>
-                        <ResponsiveContainer width="100%" height={200}>
-                          {loading ? (
-                            <div className="flex items-center justify-center h-full">
-                              <div className="text-muted-foreground">
-                                Loading...
-                              </div>
-                            </div>
-                          ) : (
-                            <PieChart>
-                              <Pie
-                                data={[
-                                  {
-                                    name: 'On Antibiotics',
-                                    value:
-                                      filteredStats?.patients_on_antibiotic ||
-                                      0,
-                                    fill: 'hsl(var(--chart-1))',
-                                  },
-                                  {
-                                    name: 'Not on Antibiotics',
-                                    value:
-                                      (filteredStats?.total_patients || 0) -
-                                      (filteredStats?.patients_on_antibiotic ||
-                                        0),
-                                    fill: 'hsl(var(--chart-2))',
-                                  },
-                                ]}
-                                cx="50%"
-                                cy="50%"
-                                innerRadius={40}
-                                outerRadius={80}
-                                paddingAngle={5}
-                                dataKey="value"
-                              >
-                                {[1, 2].map((entry, index) => (
-                                  <Cell key={`cell-${index}`} />
-                                ))}
-                              </Pie>
-                              <Tooltip
-                                formatter={(value) => [`${value}`, 'Patients']}
-                              />
-                            </PieChart>
-                          )}
-                        </ResponsiveContainer>
-                        <div className="mt-2">
-                          <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-                            {filteredStats?.total_patients?.toLocaleString() ||
-                              '0'}
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            Total Patients
-                          </div>
-                        </div>
+              {/* PPS Clinical Metrics */}
+              <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5 text-blue-600" />
+                    PPS Clinical Metrics
+                  </CardTitle>
+                  <CardDescription>
+                    Additional surveillance indicators and quality measures
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="space-y-3">
+                      <div className="text-sm font-medium">
+                        Culture Sampling
                       </div>
-
-                      {/* Specimens Donut Chart */}
-                      <div className="text-center">
-                        <h4 className="text-lg font-semibold mb-4 text-slate-700 dark:text-slate-300">
-                          Culture Results
-                        </h4>
-                        <ResponsiveContainer width="100%" height={200}>
-                          {loading ? (
-                            <div className="flex items-center justify-center h-full">
-                              <div className="text-muted-foreground">
-                                Loading...
-                              </div>
-                            </div>
-                          ) : (
-                            <PieChart>
-                              <Pie
-                                data={formatChartData(
-                                  specimenStats?.by_result || [],
-                                  'result',
-                                  'count'
-                                )}
-                                cx="50%"
-                                cy="50%"
-                                innerRadius={40}
-                                outerRadius={80}
-                                paddingAngle={5}
-                                dataKey="value"
-                              >
-                                {formatChartData(
-                                  specimenStats?.by_result || [],
-                                  'result',
-                                  'count'
-                                ).map((entry, index) => (
-                                  <Cell
-                                    key={`cell-${index}`}
-                                    fill={entry.color}
-                                  />
-                                ))}
-                              </Pie>
-                              <Tooltip
-                                formatter={(value) => [`${value}`, 'Specimens']}
-                              />
-                            </PieChart>
-                          )}
-                        </ResponsiveContainer>
-                        <div className="mt-2">
-                          <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-                            {specimenStats?.total_specimens?.toLocaleString() ||
-                              '0'}
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            Total Specimens
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* PPS Metrics Sidebar */}
-                <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <BarChart3 className="h-5 w-5 text-blue-600" />
-                      PPS Clinical Metrics
-                    </CardTitle>
-                    <CardDescription className="text-xs">
-                      Additional surveillance indicators
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="border-b pb-3">
-                      <div className="text-sm font-medium mb-2">
-                        Culture Sampling Metrics
-                      </div>
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-xs">Culture samples taken</span>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs">Samples taken</span>
                         <span className="text-xs font-mono">
                           {specimenStats?.total_specimens || 0}
                         </span>
@@ -1169,36 +1037,28 @@ export default function PPSDashboard() {
                       </div>
                     </div>
 
-                    <div className="border-b pb-3">
-                      <div className="text-sm font-medium mb-2">
-                        Missed Doses
-                      </div>
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-xs">
-                          Patients with missed doses
-                        </span>
+                    <div className="space-y-3">
+                      <div className="text-sm font-medium">Missed Doses</div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs">Patients affected</span>
                         <span className="text-xs font-mono">23</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-xs">Total missed doses</span>
-                        <span className="text-xs font-mono">89</span>
+                        <span className="text-xs">Total missed</span>
+                        <span className="text-xs font-mono">89 doses</span>
                       </div>
                     </div>
 
-                    <div className="border-b pb-3">
-                      <div className="text-sm font-medium mb-2">
-                        Hospital Stay
-                      </div>
-                      <div className="flex justify-between items-center mb-1">
+                    <div className="space-y-3">
+                      <div className="text-sm font-medium">Hospital Stay</div>
+                      <div className="flex justify-between items-center">
                         <span className="text-xs">Avg days on ward</span>
                         <span className="text-xs font-mono">
                           {filteredStats?.total_patients ? '4.2' : '0'} days
                         </span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-xs">
-                          Prior hospitalization (90d)
-                        </span>
+                        <span className="text-xs">Prior hospitalization</span>
                         <span className="text-xs font-mono">
                           {Math.round(
                             (filteredStats?.total_patients || 0) * 0.18
@@ -1207,34 +1067,11 @@ export default function PPSDashboard() {
                       </div>
                     </div>
 
-                    <div className="border-b pb-3">
-                      <div className="text-sm font-medium mb-2">
-                        WHO AWaRe Classification
-                      </div>
-                      <div className="space-y-1">
-                        <div className="flex justify-between items-center">
-                          <span className="text-xs">Access</span>
-                          <span className="text-xs text-green-600">72%</span>
-                        </div>
-                        <Progress value={72} className="h-1" />
-                        <div className="flex justify-between items-center">
-                          <span className="text-xs">Watch</span>
-                          <span className="text-xs text-yellow-600">22%</span>
-                        </div>
-                        <Progress value={22} className="h-1" />
-                        <div className="flex justify-between items-center">
-                          <span className="text-xs">Reserve</span>
-                          <span className="text-xs text-red-600">6%</span>
-                        </div>
-                        <Progress value={6} className="h-1" />
-                      </div>
-                    </div>
-
-                    <div>
-                      <div className="text-sm font-medium mb-2">
+                    <div className="space-y-3">
+                      <div className="text-sm font-medium">
                         Indication Types
                       </div>
-                      <div className="flex justify-between items-center mb-1">
+                      <div className="flex justify-between items-center">
                         <span className="text-xs">Therapeutic</span>
                         <span className="text-xs font-mono">
                           {Math.round(
@@ -1242,7 +1079,7 @@ export default function PPSDashboard() {
                           )}
                         </span>
                       </div>
-                      <div className="flex justify-between items-center mb-1">
+                      <div className="flex justify-between items-center">
                         <span className="text-xs">Prophylactic</span>
                         <span className="text-xs font-mono">
                           {Math.round(
@@ -1251,9 +1088,9 @@ export default function PPSDashboard() {
                         </span>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-              </div>
+                  </div>
+                </CardContent>
+              </Card>
 
               {/* PPS Detailed Analysis Charts */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
