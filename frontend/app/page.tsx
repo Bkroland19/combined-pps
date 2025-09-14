@@ -1662,8 +1662,8 @@ export default function PPSDashboard() {
 											{loading
 												? "..."
 												: allCultureMetrics
-												? allCultureMetrics?.percentage_culture_based_prescriptions
-												: "0.0"}
+												? Math.floor(allCultureMetrics?.percentage_culture_based_prescriptions)
+												: "0.0"} %
 										</div>
 										<p className="text-xs text-amber-600 dark:text-amber-400">
 											N:{" "}
@@ -1692,8 +1692,8 @@ export default function PPSDashboard() {
 											{loading
 												? "..."
 												: allGuideMetrics
-												? allGuideMetrics?.percentage_guideline_compliant
-												: "0.0"}
+												? Math.floor(allGuideMetrics?.percentage_guideline_compliant)
+												: "0.0"} %
 										</div>
 										<p className="text-xs text-muted-foreground mt-1">
 											Prescriptions following
@@ -1715,8 +1715,8 @@ export default function PPSDashboard() {
 											{loading
 												? "..."
 												: allDiagnosisMetrics
-												? allDiagnosisMetrics?.percentage_appropriate_diagnosis
-												: "0.0"}
+												? Math.floor(allDiagnosisMetrics?.percentage_appropriate_diagnosis)
+												: "0.0"} %
 										</div>
 										<p className="text-xs text-muted-foreground mt-1">
 											Prescriptions with
