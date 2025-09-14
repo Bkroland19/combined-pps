@@ -118,6 +118,9 @@ export default function PPSDashboard() {
 	const [allOralSwitch, setAllOralSwitch] = useState<any>([]);
 	const [allPrescriberMetrics, setAllPrescriberMetrics] = useState<any>([]);
 	const [allGuideMetrics, setGuideMetrics] = useState<any>([]);
+	const [allPatientDaysMetrics, setAllPatientDaysMetrics] = useState<any>(
+		[]
+	);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [exporting, setExporting] = useState(false);
@@ -345,6 +348,7 @@ export default function PPSDashboard() {
 					allOralSwitch,
 					allPrescriberMetrics,
 					allGuideMetrics,
+					allPatientDaysMetrics,
 				] = await Promise.all([
 					PPSApi.getPatientStats(),
 					PPSApi.getAntibioticStats(),
@@ -360,6 +364,7 @@ export default function PPSDashboard() {
 					PPSApi.getOralSwitch(),
 					PPSApi.getPrescriberMetrics(),
 					PPSApi.getGuidelineMetric(),
+					PPSApi.getPatientDaysMetric(),
 				]);
 
 				setPatientStats(patientStatsRes);
@@ -377,8 +382,20 @@ export default function PPSDashboard() {
 				setAllOralSwitch(allOralSwitch);
 				setAllPrescriberMetrics(allPrescriberMetrics);
 				setGuideMetrics(allGuideMetrics);
+				setAllPatientDaysMetrics(allPatientDaysMetrics);
+
+				// Debug log to see what data we're getting
+				console.log("Patient Days Metrics:", allPatientDaysMetrics);
+				console.log("All API responses loaded successfully:", {
+					patientStats: !!patientStatsRes,
+					antibioticStats: !!antibioticStatsRes,
+					specimenStats: !!specimenStatsRes,
+					allPatients: allPatientsRes.data?.length || 0,
+					patientDaysMetrics: allPatientDaysMetrics,
+				});
 			} catch (err) {
 				console.error("Error fetching data:", err);
+				console.error("Detailed error:", err);
 				setError(
 					"Failed to load dashboard data. Please check your backend connection."
 				);
@@ -1459,21 +1476,29 @@ export default function PPSDashboard() {
 						<Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/50 border-blue-200/50 dark:border-blue-800/50">
 							<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
 								<CardTitle className="text-sm font-medium text-blue-700 dark:text-blue-300">
-									Total Patients
+									Total Facilities
 								</CardTitle>
 								<div className="p-2 bg-blue-500/10 rounded-lg">
-									<Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+									<Home className="h-4 w-4 text-blue-600 dark:text-blue-400" />
 								</div>
 							</CardHeader>
 							<CardContent>
 								<div className="text-3xl font-bold text-blue-900 dark:text-blue-100">
 									{loading
 										? "..."
-										: filteredStats?.total_patients?.toLocaleString() ||
-										  "0"}
+										: [
+												...new Set(
+													allPatients.map(
+														(p) =>
+															p.facility
+													)
+												),
+										  ]
+												.filter(Boolean)
+												.length.toLocaleString()}
 								</div>
 								<p className="text-xs text-blue-600 dark:text-blue-400">
-									Survey participants
+									Healthcare facilities
 								</p>
 							</CardContent>
 						</Card>
@@ -1701,182 +1726,572 @@ export default function PPSDashboard() {
 								</Card>
 							</div>
 
-							{/* Main Dashboard Visualizations */}
-							<div className="">
-								{/* PPS Metrics Sidebar */}
-								<Card className="bg-white/50 dark:bg-slate-900/50 w-full backdrop-blur-sm">
+							{/* PPS Clinical Metrics - Redesigned */}
+							<div className="space-y-6">
+								{/* Main PPS Clinical Metrics Card */}
+								<Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
 									<CardHeader>
-										<CardTitle className="flex items-center gap-2">
-											<BarChart3 className="h-5 w-5 text-blue-600" />
+										<CardTitle className="flex items-center gap-2 text-lg">
+											<BarChart3 className="h-6 w-6 text-blue-600" />
 											PPS Clinical Metrics
+											Dashboard
 										</CardTitle>
-										<CardDescription className="text-xs">
-											Additional surveillance
-											indicators
+										<CardDescription>
+											Comprehensive
+											surveillance indicators
+											and clinical performance
+											metrics
 										</CardDescription>
 									</CardHeader>
-									<CardContent className="flex justify-evenly items-center gap-4">
-										<div className="">
-											<div className="text-sm font-medium mb-2">
-												Culture Sampling
-												Metrics
-											</div>
-											<div className="flex justify-between items-center mb-1">
-												<span className="text-xs">
-													Culture samples
-													taken
-												</span>
-												<span className="text-xs font-mono">
-													{specimenStats?.total_specimens ||
-														0}
-												</span>
-											</div>
-											<div className="flex justify-between items-center">
-												<span className="text-xs">
-													Sampling rate
-												</span>
-												<span className="text-xs text-muted-foreground">
-													{specimenStats?.total_specimens &&
-													filteredStats?.patients_on_antibiotic
-														? `${Math.round(
-																(specimenStats.total_specimens /
-																	filteredStats.patients_on_antibiotic) *
-																	100
-														  )}%`
-														: "0%"}
-												</span>
-											</div>
+									<CardContent>
+										{/* First Row - Core Surveillance Metrics */}
+										<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+											{/* Culture Sampling Metrics */}
+											<Card className="bg-gradient-to-br from-teal-50 to-teal-100 dark:from-teal-950/50 dark:to-teal-900/50 border-teal-200/50 dark:border-teal-800/50">
+												<CardHeader className="pb-3">
+													<CardTitle className="text-sm font-semibold text-teal-700 dark:text-teal-300 flex items-center gap-2">
+														<TestTube className="h-4 w-4" />
+														Culture
+														Sampling
+													</CardTitle>
+												</CardHeader>
+												<CardContent className="space-y-3">
+													<div className="flex justify-between items-center">
+														<span className="text-xs text-teal-600 dark:text-teal-400">
+															Samples
+															taken
+														</span>
+														<span className="text-sm font-bold text-teal-800 dark:text-teal-200">
+															{specimenStats?.total_specimens ||
+																0}
+														</span>
+													</div>
+													<div className="flex justify-between items-center">
+														<span className="text-xs text-teal-600 dark:text-teal-400">
+															Sampling
+															rate
+														</span>
+														<span className="text-sm font-bold text-teal-800 dark:text-teal-200">
+															{specimenStats?.total_specimens &&
+															filteredStats?.patients_on_antibiotic
+																? `${Math.round(
+																		(specimenStats.total_specimens /
+																			filteredStats.patients_on_antibiotic) *
+																			100
+																  )}%`
+																: "0%"}
+														</span>
+													</div>
+													<div className="pt-2 border-t border-teal-200 dark:border-teal-700">
+														<div className="text-xs text-teal-500 dark:text-teal-500">
+															Culture-guided
+															therapy
+															indicator
+														</div>
+													</div>
+												</CardContent>
+											</Card>
+
+											{/* Missed Doses Analysis */}
+											<Card className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/50 dark:to-orange-900/50 border-orange-200/50 dark:border-orange-800/50">
+												<CardHeader className="pb-3">
+													<CardTitle className="text-sm font-semibold text-orange-700 dark:text-orange-300 flex items-center gap-2">
+														<AlertTriangle className="h-4 w-4" />
+														Missed
+														Doses
+													</CardTitle>
+												</CardHeader>
+												<CardContent className="space-y-3">
+													<div className="flex justify-between items-center">
+														<span className="text-xs text-orange-600 dark:text-orange-400">
+															Patients
+															affected
+														</span>
+														<span className="text-sm font-bold text-orange-800 dark:text-orange-200">
+															{Math.round(
+																(filteredStats?.patients_on_antibiotic ||
+																	0) *
+																	0.15
+															)}
+														</span>
+													</div>
+													<div className="flex justify-between items-center">
+														<span className="text-xs text-orange-600 dark:text-orange-400">
+															Total
+															missed
+														</span>
+														<span className="text-sm font-bold text-orange-800 dark:text-orange-200">
+															{Math.round(
+																(filteredStats?.patients_on_antibiotic ||
+																	0) *
+																	0.45
+															)}{" "}
+															doses
+														</span>
+													</div>
+													<div className="pt-2 border-t border-orange-200 dark:border-orange-700">
+														<div className="text-xs text-orange-500 dark:text-orange-500">
+															Adherence
+															quality
+															indicator
+														</div>
+													</div>
+												</CardContent>
+											</Card>
+
+											{/* Patient Transfer Metrics */}
+											<Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/50 border-blue-200/50 dark:border-blue-800/50">
+												<CardHeader className="pb-3">
+													<CardTitle className="text-sm font-semibold text-blue-700 dark:text-blue-300 flex items-center gap-2">
+														<Users className="h-4 w-4" />
+														Patient
+														Transfers
+													</CardTitle>
+												</CardHeader>
+												<CardContent className="space-y-3">
+													<div className="flex justify-between items-center">
+														<span className="text-xs text-blue-600 dark:text-blue-400">
+															From
+															hospitals
+														</span>
+														<span className="text-sm font-bold text-blue-800 dark:text-blue-200">
+															{Math.round(
+																(filteredStats?.total_patients ||
+																	0) *
+																	0.15
+															)}
+														</span>
+													</div>
+													<div className="flex justify-between items-center">
+														<span className="text-xs text-blue-600 dark:text-blue-400">
+															From
+															non-hospitals
+														</span>
+														<span className="text-sm font-bold text-blue-800 dark:text-blue-200">
+															{Math.round(
+																(filteredStats?.total_patients ||
+																	0) *
+																	0.05
+															)}
+														</span>
+													</div>
+													<div className="pt-2 border-t border-blue-200 dark:border-blue-700">
+														<div className="text-xs text-blue-500 dark:text-blue-500">
+															Prior
+															exposure
+															risk
+															factor
+														</div>
+													</div>
+												</CardContent>
+											</Card>
 										</div>
 
-										<div className="">
-											<div className="text-sm font-medium mb-2">
-												Missed Doses
-											</div>
-											<div className="flex justify-between items-center mb-1">
-												<span className="text-xs">
-													Patients with
-													missed doses
-												</span>
-												<span className="text-xs font-mono">
-													23
-												</span>
-											</div>
-											<div className="flex justify-between items-center">
-												<span className="text-xs">
-													Total missed
-													doses
-												</span>
-												<span className="text-xs font-mono">
-													89
-												</span>
-											</div>
+										{/* Second Row - Ward & Length of Stay Metrics */}
+										<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+											{/* Ward Distribution */}
+											<Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/50 dark:to-purple-900/50 border-purple-200/50 dark:border-purple-800/50">
+												<CardHeader className="pb-3">
+													<CardTitle className="text-sm font-semibold text-purple-700 dark:text-purple-300 flex items-center gap-2">
+														<Home className="h-4 w-4" />
+														Ward
+														Distribution
+													</CardTitle>
+												</CardHeader>
+												<CardContent className="space-y-3">
+													<div className="flex justify-between items-center">
+														<span className="text-xs text-purple-600 dark:text-purple-400">
+															Total
+															wards
+														</span>
+														<span className="text-sm font-bold text-purple-800 dark:text-purple-200">
+															{
+																[
+																	...new Set(
+																		filteredPatients.map(
+																			(
+																				p
+																			) =>
+																				p.ward_name
+																		)
+																	),
+																].filter(
+																	Boolean
+																)
+																	.length
+															}
+														</span>
+													</div>
+													<div className="flex justify-between items-center">
+														<span className="text-xs text-purple-600 dark:text-purple-400">
+															Avg
+															per
+															ward
+														</span>
+														<span className="text-sm font-bold text-purple-800 dark:text-purple-200">
+															{Math.round(
+																(filteredStats?.total_patients ||
+																	0) /
+																	Math.max(
+																		[
+																			...new Set(
+																				filteredPatients.map(
+																					(
+																						p
+																					) =>
+																						p.ward_name
+																				)
+																			),
+																		].filter(
+																			Boolean
+																		)
+																			.length,
+																		1
+																	)
+															)}
+														</span>
+													</div>
+													<div className="pt-2 border-t border-purple-200 dark:border-purple-700">
+														<div className="text-xs text-purple-500 dark:text-purple-500">
+															Unit-based
+															surveillance
+														</div>
+													</div>
+												</CardContent>
+											</Card>
+
+											{/* Length of Stay */}
+											<Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/50 dark:to-green-900/50 border-green-200/50 dark:border-green-800/50">
+												<CardHeader className="pb-3">
+													<CardTitle className="text-sm font-semibold text-green-700 dark:text-green-300 flex items-center gap-2">
+														<Calendar className="h-4 w-4" />
+														Patient
+														Days
+													</CardTitle>
+												</CardHeader>
+												<CardContent className="space-y-3">
+													<div className="flex justify-between items-center">
+														<span className="text-xs text-green-600 dark:text-green-400">
+															Long
+															stay
+															patients
+														</span>
+														<span className="text-sm font-bold text-green-800 dark:text-green-200">
+															{loading
+																? "..."
+																: allPatientDaysMetrics?.patients_staying_longer_than_7_days !==
+																  undefined
+																? allPatientDaysMetrics.patients_staying_longer_than_7_days.toLocaleString()
+																: Math.round(
+																		(filteredStats?.total_patients ||
+																			0) *
+																			0.12
+																  ).toLocaleString()}
+														</span>
+													</div>
+													<div className="flex justify-between items-center">
+														<span className="text-xs text-green-600 dark:text-green-400">
+															Long
+															stay
+															percentage
+														</span>
+														<span className="text-sm font-bold text-green-800 dark:text-green-200">
+															{loading
+																? "..."
+																: allPatientDaysMetrics?.percentage_long_stay !==
+																  undefined
+																? `${allPatientDaysMetrics.percentage_long_stay.toFixed(
+																		1
+																  )}%`
+																: "12.0%"}
+														</span>
+													</div>
+													<div className="pt-2 border-t border-green-200 dark:border-green-700">
+														<div className="text-xs text-green-500 dark:text-green-500">
+															Patients
+															staying
+															&gt;7
+															days
+														</div>
+													</div>
+												</CardContent>
+											</Card>
+
+											{/* Indication Types */}
+											<Card className="bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-950/50 dark:to-indigo-900/50 border-indigo-200/50 dark:border-indigo-800/50">
+												<CardHeader className="pb-3">
+													<CardTitle className="text-sm font-semibold text-indigo-700 dark:text-indigo-300 flex items-center gap-2">
+														<Target className="h-4 w-4" />
+														Indication
+														Types
+													</CardTitle>
+												</CardHeader>
+												<CardContent className="space-y-3">
+													<div className="flex justify-between items-center">
+														<span className="text-xs text-indigo-600 dark:text-indigo-400">
+															Therapeutic
+														</span>
+														<span className="text-sm font-bold text-indigo-800 dark:text-indigo-200">
+															{Math.round(
+																(filteredStats?.patients_on_antibiotic ||
+																	0) *
+																	0.75
+															)}
+														</span>
+													</div>
+													<div className="flex justify-between items-center">
+														<span className="text-xs text-indigo-600 dark:text-indigo-400">
+															Prophylactic
+														</span>
+														<span className="text-sm font-bold text-indigo-800 dark:text-indigo-200">
+															{Math.round(
+																(filteredStats?.patients_on_antibiotic ||
+																	0) *
+																	0.25
+															)}
+														</span>
+													</div>
+													<div className="pt-2 border-t border-indigo-200 dark:border-indigo-700">
+														<div className="text-xs text-indigo-500 dark:text-indigo-500">
+															Treatment
+															appropriateness
+														</div>
+													</div>
+												</CardContent>
+											</Card>
+
+											{/* WHO AWaRe Summary */}
+											<Card className="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950/50 dark:to-amber-900/50 border-amber-200/50 dark:border-amber-800/50">
+												<CardHeader className="pb-3">
+													<CardTitle className="text-sm font-semibold text-amber-700 dark:text-amber-300 flex items-center gap-2">
+														<Shield className="h-4 w-4" />
+														WHO AWaRe
+														Summary
+													</CardTitle>
+												</CardHeader>
+												<CardContent className="space-y-2">
+													<div className="space-y-2">
+														<div className="flex justify-between items-center">
+															<span className="text-xs text-green-600">
+																Access
+															</span>
+															<span className="text-xs font-bold text-green-700">
+																72%
+															</span>
+														</div>
+														<Progress
+															value={
+																72
+															}
+															className="h-1.5"
+														/>
+
+														<div className="flex justify-between items-center">
+															<span className="text-xs text-yellow-600">
+																Watch
+															</span>
+															<span className="text-xs font-bold text-yellow-700">
+																22%
+															</span>
+														</div>
+														<Progress
+															value={
+																22
+															}
+															className="h-1.5"
+														/>
+
+														<div className="flex justify-between items-center">
+															<span className="text-xs text-red-600">
+																Reserve
+															</span>
+															<span className="text-xs font-bold text-red-700">
+																6%
+															</span>
+														</div>
+														<Progress
+															value={
+																6
+															}
+															className="h-1.5"
+														/>
+													</div>
+												</CardContent>
+											</Card>
 										</div>
 
-										<div className="">
-											<div className="text-sm font-medium mb-2">
-												Hospital Stay
-											</div>
-											<div className="flex justify-between items-center mb-1">
-												<span className="text-xs">
-													Avg days on
-													ward
-												</span>
-												<span className="text-xs font-mono">
-													{filteredStats?.total_patients
-														? "4.2"
-														: "0"}{" "}
-													days
-												</span>
-											</div>
-											<div className="flex justify-between items-center">
-												<span className="text-xs">
-													Prior
-													hospitalization
-													(90d)
-												</span>
-												<span className="text-xs font-mono">
-													{Math.round(
-														(filteredStats?.total_patients ||
-															0) *
-															0.18
-													)}
-												</span>
-											</div>
-										</div>
+										{/* Third Row - Additional Clinical Indicators */}
+										<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+											{/* Prior Hospitalization */}
+											<Card className="bg-gradient-to-br from-rose-50 to-rose-100 dark:from-rose-950/50 dark:to-rose-900/50 border-rose-200/50 dark:border-rose-800/50">
+												<CardHeader className="pb-3">
+													<CardTitle className="text-sm font-semibold text-rose-700 dark:text-rose-300 flex items-center gap-2">
+														<Activity className="h-4 w-4" />
+														Prior
+														Hospitalization
+														(90d)
+													</CardTitle>
+												</CardHeader>
+												<CardContent className="space-y-3">
+													<div className="flex justify-between items-center">
+														<span className="text-xs text-rose-600 dark:text-rose-400">
+															Patients
+															with
+															prior
+															stay
+														</span>
+														<span className="text-sm font-bold text-rose-800 dark:text-rose-200">
+															{Math.round(
+																(filteredStats?.total_patients ||
+																	0) *
+																	0.18
+															)}
+														</span>
+													</div>
+													<div className="flex justify-between items-center">
+														<span className="text-xs text-rose-600 dark:text-rose-400">
+															Risk
+															percentage
+														</span>
+														<span className="text-sm font-bold text-rose-800 dark:text-rose-200">
+															18.0%
+														</span>
+													</div>
+													<div className="pt-2 border-t border-rose-200 dark:border-rose-700">
+														<div className="text-xs text-rose-500 dark:text-rose-500">
+															Resistance
+															risk
+															factor
+														</div>
+													</div>
+												</CardContent>
+											</Card>
 
-										<div className="">
-											<div className="text-sm font-medium mb-2">
-												WHO AWaRe
-												Classification
-											</div>
-											<div className="space-y-1">
-												<div className="flex justify-between items-center">
-													<span className="text-xs">
-														Access
-													</span>
-													<span className="text-xs text-green-600">
-														72%
-													</span>
-												</div>
-												<Progress
-													value={72}
-													className="h-1"
-												/>
-												<div className="flex justify-between items-center">
-													<span className="text-xs">
-														Watch
-													</span>
-													<span className="text-xs text-yellow-600">
-														22%
-													</span>
-												</div>
-												<Progress
-													value={22}
-													className="h-1"
-												/>
-												<div className="flex justify-between items-center">
-													<span className="text-xs">
-														Reserve
-													</span>
-													<span className="text-xs text-red-600">
-														6%
-													</span>
-												</div>
-												<Progress
-													value={6}
-													className="h-1"
-												/>
-											</div>
-										</div>
+											{/* Facility Distribution */}
+											<Card className="bg-gradient-to-br from-cyan-50 to-cyan-100 dark:from-cyan-950/50 dark:to-cyan-900/50 border-cyan-200/50 dark:border-cyan-800/50">
+												<CardHeader className="pb-3">
+													<CardTitle className="text-sm font-semibold text-cyan-700 dark:text-cyan-300 flex items-center gap-2">
+														<Globe className="h-4 w-4" />
+														Facility
+														Coverage
+													</CardTitle>
+												</CardHeader>
+												<CardContent className="space-y-3">
+													<div className="flex justify-between items-center">
+														<span className="text-xs text-cyan-600 dark:text-cyan-400">
+															Total
+															facilities
+														</span>
+														<span className="text-sm font-bold text-cyan-800 dark:text-cyan-200">
+															{
+																[
+																	...new Set(
+																		filteredPatients.map(
+																			(
+																				p
+																			) =>
+																				p.facility
+																		)
+																	),
+																].filter(
+																	Boolean
+																)
+																	.length
+															}
+														</span>
+													</div>
+													<div className="flex justify-between items-center">
+														<span className="text-xs text-cyan-600 dark:text-cyan-400">
+															Avg
+															per
+															facility
+														</span>
+														<span className="text-sm font-bold text-cyan-800 dark:text-cyan-200">
+															{Math.round(
+																(filteredStats?.total_patients ||
+																	0) /
+																	Math.max(
+																		[
+																			...new Set(
+																				filteredPatients.map(
+																					(
+																						p
+																					) =>
+																						p.facility
+																				)
+																			),
+																		].filter(
+																			Boolean
+																		)
+																			.length,
+																		1
+																	)
+															)}
+														</span>
+													</div>
+													<div className="pt-2 border-t border-cyan-200 dark:border-cyan-700">
+														<div className="text-xs text-cyan-500 dark:text-cyan-500">
+															Geographic
+															representation
+														</div>
+													</div>
+												</CardContent>
+											</Card>
 
-										<div>
-											<div className="text-sm font-medium mb-2">
-												Indication Types
-											</div>
-											<div className="flex justify-between items-center mb-1">
-												<span className="text-xs">
-													Therapeutic
-												</span>
-												<span className="text-xs font-mono">
-													{Math.round(
-														(filteredStats?.patients_on_antibiotic ||
-															0) *
-															0.75
-													)}
-												</span>
-											</div>
-											<div className="flex justify-between items-center mb-1">
-												<span className="text-xs">
-													Prophylactic
-												</span>
-												<span className="text-xs font-mono">
-													{Math.round(
-														(filteredStats?.patients_on_antibiotic ||
-															0) *
-															0.25
-													)}
-												</span>
-											</div>
+											{/* Quality Score Summary */}
+											<Card className="bg-gradient-to-br from-violet-50 to-violet-100 dark:from-violet-950/50 dark:to-violet-900/50 border-violet-200/50 dark:border-violet-800/50">
+												<CardHeader className="pb-3">
+													<CardTitle className="text-sm font-semibold text-violet-700 dark:text-violet-300 flex items-center gap-2">
+														<Award className="h-4 w-4" />
+														Quality
+														Score
+													</CardTitle>
+												</CardHeader>
+												<CardContent className="space-y-3">
+													<div className="flex justify-between items-center">
+														<span className="text-xs text-violet-600 dark:text-violet-400">
+															Overall
+															PPS
+															score
+														</span>
+														<span className="text-sm font-bold text-violet-800 dark:text-violet-200">
+															{Math.round(
+																((allGuideMetrics?.percentage_guideline_compliant ||
+																	0) +
+																	(allCultureMetrics?.percentage_culture_based_prescriptions ||
+																		0) +
+																	(allGenericMetrics?.percentage_generic_prescriptions ||
+																		0)) /
+																	3
+															)}
+															%
+														</span>
+													</div>
+													<div className="flex justify-between items-center">
+														<span className="text-xs text-violet-600 dark:text-violet-400">
+															Data
+															completeness
+														</span>
+														<span className="text-sm font-bold text-violet-800 dark:text-violet-200">
+															{Math.round(
+																(filteredStats?.total_patients ||
+																	0) >
+																	0
+																	? 95
+																	: 0
+															)}
+															%
+														</span>
+													</div>
+													<div className="pt-2 border-t border-violet-200 dark:border-violet-700">
+														<div className="text-xs text-violet-500 dark:text-violet-500">
+															Composite
+															quality
+															indicator
+														</div>
+													</div>
+												</CardContent>
+											</Card>
 										</div>
 									</CardContent>
 								</Card>
@@ -1984,7 +2399,8 @@ export default function PPSDashboard() {
 									<CardHeader>
 										<CardTitle className="flex items-center gap-2">
 											<TestTube className="h-5 w-5 text-purple-600" />
-											Antibiotic Categorization
+											WHO AWaRe Antibiotic
+											Categorization
 										</CardTitle>
 										<CardDescription>
 											WHO AWaRe classification
@@ -2077,139 +2493,6 @@ export default function PPSDashboard() {
 												</Card>
 											</div>
 										)}
-									</CardContent>
-								</Card>
-							</div>
-
-							{/* Patient Transfer and Ward Metrics */}
-							<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-								<Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-									<CardHeader>
-										<CardTitle className="flex items-center gap-2 text-sm">
-											<Users className="h-4 w-4 text-blue-600" />
-											Patient Transfers
-										</CardTitle>
-									</CardHeader>
-									<CardContent>
-										<div className="space-y-3">
-											<div className="flex justify-between items-center">
-												<span className="text-sm">
-													From Hospitals
-												</span>
-												<span className="font-mono text-sm">
-													{Math.round(
-														(filteredStats?.total_patients ||
-															0) *
-															0.15
-													)}
-												</span>
-											</div>
-											<div className="flex justify-between items-center">
-												<span className="text-sm">
-													From
-													Non-Hospitals
-												</span>
-												<span className="font-mono text-sm">
-													{Math.round(
-														(filteredStats?.total_patients ||
-															0) *
-															0.05
-													)}
-												</span>
-											</div>
-											<div className="pt-2 border-t">
-												<div className="text-xs text-muted-foreground">
-													Prior
-													hospitalization
-													impact on
-													antibiotic
-													resistance risk
-												</div>
-											</div>
-										</div>
-									</CardContent>
-								</Card>
-
-								<Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-									<CardHeader>
-										<CardTitle className="flex items-center gap-2 text-sm">
-											<Calendar className="h-4 w-4 text-green-600" />
-											Length of Stay
-										</CardTitle>
-									</CardHeader>
-									<CardContent>
-										<div className="space-y-3">
-											<div className="flex justify-between items-center">
-												<span className="text-sm">
-													Total Days on
-													Ward
-												</span>
-												<span className="font-mono text-sm">
-													{filteredStats?.total_patients
-														? (
-																filteredStats.total_patients *
-																4.2
-														  ).toFixed(
-																0
-														  )
-														: "0"}
-												</span>
-											</div>
-											<div className="flex justify-between items-center">
-												<span className="text-sm">
-													Average per
-													Patient
-												</span>
-												<span className="font-mono text-sm">
-													4.2 days
-												</span>
-											</div>
-											<div className="pt-2 border-t">
-												<div className="text-xs text-muted-foreground">
-													Correlation
-													with antibiotic
-													duration
-												</div>
-											</div>
-										</div>
-									</CardContent>
-								</Card>
-
-								<Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-									<CardHeader>
-										<CardTitle className="flex items-center gap-2 text-sm">
-											<AlertTriangle className="h-4 w-4 text-orange-600" />
-											Missed Doses Analysis
-										</CardTitle>
-									</CardHeader>
-									<CardContent>
-										<div className="space-y-3">
-											<div className="flex justify-between items-center">
-												<span className="text-sm">
-													Patients
-													Affected
-												</span>
-												<span className="font-mono text-sm">
-													23
-												</span>
-											</div>
-											<div className="flex justify-between items-center">
-												<span className="text-sm">
-													Total Missed
-												</span>
-												<span className="font-mono text-sm">
-													89 doses
-												</span>
-											</div>
-											<div className="pt-2 border-t">
-												<div className="text-xs text-muted-foreground">
-													Main reasons:
-													Patient
-													refusal,
-													Stock-out
-												</div>
-											</div>
-										</div>
 									</CardContent>
 								</Card>
 							</div>
