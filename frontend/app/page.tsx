@@ -61,6 +61,7 @@ import {
 	Target,
 	Award,
 	Globe,
+	ChevronDown,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import {
@@ -70,6 +71,11 @@ import {
 	SpecimenStats,
 	Patient,
 } from "@/lib/api";
+import {
+	ExportService,
+	exportDashboard,
+	debugExportSetup,
+} from "@/lib/export-utils";
 
 // Data transformation utilities
 const formatChartData = (
@@ -100,8 +106,20 @@ export default function PPSDashboard() {
 	);
 	const [recentPatients, setRecentPatients] = useState<Patient[]>([]);
 	const [allPatients, setAllPatients] = useState<Patient[]>([]);
+	const [allBasicMetrics, setAllBasicMetrics] = useState<any>([]);
+	const [allCultureMetrics, setAllCultureMetrics] = useState<any>([]);
+	const [allDiagnosisMetrics, setAllDiagnosisMetrics] = useState<any>([]);
+	const [allGenericMetrics, setAllGenericMetrics] = useState<any>([]);
+	const [allIndicators, setAllIndicators] = useState<any>([]);
+	const [allInjectableMetrics, setAllInjectableMetrics] = useState<any>([]);
+	const [allMissedDose, setAllMissedDose] = useState<any>([]);
+	const [allOralSwitch, setAllOralSwitch] = useState<any>([]);
+	const [allPrescriberMetrics, setAllPrescriberMetrics] = useState<any>([]);
+	const [allGuideMetrics, setGuideMetrics] = useState<any>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
+	const [exporting, setExporting] = useState(false);
+	const [exportMenuOpen, setExportMenuOpen] = useState(false);
 
 	// Cascading filter state
 	const [selectedRegion, setSelectedRegion] = useState<string>("all");
@@ -313,11 +331,31 @@ export default function PPSDashboard() {
 					antibioticStatsRes,
 					specimenStatsRes,
 					allPatientsRes,
+					allBasicMetrics,
+					allCultureMetrics,
+					allDiagnosisMetrics,
+					allGenericMetrics,
+					allIndicators,
+					allInjectableMetrics,
+					allMissedDose,
+					allOralSwitch,
+					allPrescriberMetrics,
+					allGuideMetrics,
 				] = await Promise.all([
 					PPSApi.getPatientStats(),
 					PPSApi.getAntibioticStats(),
 					PPSApi.getSpecimenStats(),
-					PPSApi.getPatients({ limit: 999999 }), // Get all patients for filtering
+					PPSApi.getPatients({ limit: 999999 }),
+					PPSApi.getBasicMetric(),
+					PPSApi.getCultureMetric(),
+					PPSApi.getDiagnosisMetric(),
+					PPSApi.getGenericMetric(),
+					PPSApi.getIndicators(),
+					PPSApi.getInjectableMetrics(),
+					PPSApi.getMissedDose(),
+					PPSApi.getOralSwitch(),
+					PPSApi.getPrescriberMetrics(),
+					PPSApi.getGuidelineMetric(),
 				]);
 
 				setPatientStats(patientStatsRes);
@@ -325,6 +363,16 @@ export default function PPSDashboard() {
 				setSpecimenStats(specimenStatsRes);
 				setAllPatients(allPatientsRes.data);
 				setRecentPatients(allPatientsRes.data.slice(0, 10));
+				setAllBasicMetrics(allBasicMetrics);
+				setAllCultureMetrics(allCultureMetrics);
+				setAllDiagnosisMetrics(allDiagnosisMetrics);
+				setAllGenericMetrics(allGenericMetrics);
+				setAllIndicators(allIndicators);
+				setAllInjectableMetrics(allInjectableMetrics);
+				setAllMissedDose(allMissedDose);
+				setAllOralSwitch(allOralSwitch);
+				setAllPrescriberMetrics(allPrescriberMetrics);
+				setGuideMetrics(allGuideMetrics);
 			} catch (err) {
 				console.error("Error fetching data:", err);
 				setError(
@@ -337,6 +385,26 @@ export default function PPSDashboard() {
 
 		fetchData();
 	}, []);
+
+	console.log(allBasicMetrics, "basic metricssssssss");
+
+	// Close export menu when clicking outside
+	useEffect(() => {
+		const handleClickOutside = (event: MouseEvent) => {
+			const target = event.target as Element;
+			if (
+				exportMenuOpen &&
+				!target.closest(".export-menu-container")
+			) {
+				setExportMenuOpen(false);
+			}
+		};
+
+		document.addEventListener("mousedown", handleClickOutside);
+		return () => {
+			document.removeEventListener("mousedown", handleClickOutside);
+		};
+	}, [exportMenuOpen]);
 
 	// Reset dependent dropdowns when parent changes
 	const handleRegionChange = (region: string) => {
@@ -366,6 +434,125 @@ export default function PPSDashboard() {
 	// Get current filtered data for display
 	const filteredStats = getFilteredStats();
 	const filteredPatients = getFilteredPatients();
+
+	// Export functions
+	const handleExportDashboard = async () => {
+		setExporting(true);
+		setError(null); // Clear any previous errors
+
+		try {
+			// Wait a bit to ensure all content is rendered
+			await new Promise((resolve) => setTimeout(resolve, 500));
+
+			await ExportService.exportDashboardToPDF({
+				filename: `PPS_Dashboard_${
+					new Date().toISOString().split("T")[0]
+				}`,
+				orientation: "landscape",
+			});
+
+			// Clear any previous errors on success
+			setError(null);
+		} catch (error) {
+			console.error("Export failed:", error);
+			const errorMessage =
+				error instanceof Error
+					? error.message
+					: "Failed to export dashboard. Please try again.";
+			setError(errorMessage);
+		} finally {
+			setExporting(false);
+		}
+	};
+
+	const handleExportPatients = async (
+		format: "csv" | "json" | "pdf" = "csv"
+	) => {
+		setExporting(true);
+		try {
+			const filters = {
+				region:
+					selectedRegion !== "all" ? selectedRegion : undefined,
+				district:
+					selectedDistrict !== "all"
+						? selectedDistrict
+						: undefined,
+				subCounty:
+					selectedSubCounty !== "all"
+						? selectedSubCounty
+						: undefined,
+				facility:
+					selectedFacility !== "all"
+						? selectedFacility
+						: undefined,
+				ownership:
+					selectedOwnership !== "all"
+						? selectedOwnership
+						: undefined,
+				levelOfCare:
+					selectedLevelOfCare !== "all"
+						? selectedLevelOfCare
+						: undefined,
+				wardName:
+					selectedWardName !== "all"
+						? selectedWardName
+						: undefined,
+			};
+
+			await ExportService.exportPatientData(
+				filteredPatients,
+				format,
+				filters
+			);
+		} catch (error) {
+			console.error("Export failed:", error);
+			setError("Failed to export patient data. Please try again.");
+		} finally {
+			setExporting(false);
+		}
+	};
+
+	const handleExportAntibiotics = async (format: "csv" | "json" = "csv") => {
+		setExporting(true);
+		try {
+			// Get antibiotic data - we'll need to fetch this from the API
+			// For now, we'll export the stats we have
+			await ExportService.exportAntibioticData(
+				[],
+				antibioticStats,
+				format
+			);
+		} catch (error) {
+			console.error("Export failed:", error);
+			setError("Failed to export antibiotic data. Please try again.");
+		} finally {
+			setExporting(false);
+		}
+	};
+
+	const handleExportDashboardSimple = async () => {
+		setExporting(true);
+		setError(null);
+
+		try {
+			await ExportService.exportDashboardSimple({
+				filename: `PPS_Dashboard_Simple_${
+					new Date().toISOString().split("T")[0]
+				}`,
+				orientation: "landscape",
+			});
+			setError(null);
+		} catch (error) {
+			console.error("Simple export failed:", error);
+			const errorMessage =
+				error instanceof Error
+					? error.message
+					: "Failed to export simplified dashboard. Please try again.";
+			setError(errorMessage);
+		} finally {
+			setExporting(false);
+		}
+	};
 
 	const sidebarItems = [
 		{ id: "visuals", label: "Visuals", icon: Eye },
@@ -775,22 +962,182 @@ export default function PPSDashboard() {
 								>
 									<Bell className="h-5 w-5" />
 								</Button>
-								<Button
-									size="sm"
-									className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
-								>
-									<Download className="h-4 w-4 mr-2" />
-									Export
-								</Button>
+
+								<div className="relative export-menu-container">
+									<Button
+										size="sm"
+										disabled={exporting}
+										onClick={() =>
+											setExportMenuOpen(
+												!exportMenuOpen
+											)
+										}
+										className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
+									>
+										<Download className="h-4 w-4 mr-2" />
+										{exporting
+											? "Exporting..."
+											: "Export"}
+										<ChevronDown
+											className={`h-4 w-4 ml-1 transition-transform ${
+												exportMenuOpen
+													? "rotate-180"
+													: ""
+											}`}
+										/>
+									</Button>
+
+									{exportMenuOpen && (
+										<div className="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-800 rounded-md shadow-xl border border-slate-200 dark:border-slate-700 z-[9999] animate-in fade-in slide-in-from-top-2 duration-200">
+											<div className="py-1">
+												<button
+													onClick={() => {
+														handleExportDashboard();
+														setExportMenuOpen(
+															false
+														);
+													}}
+													className="w-full text-left px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center transition-colors"
+													disabled={
+														exporting
+													}
+												>
+													<Download className="h-4 w-4 mr-2 text-slate-500" />
+													<span>
+														Full
+														Dashboard
+														PDF
+													</span>
+												</button>
+												<button
+													onClick={() => {
+														handleExportDashboardSimple();
+														setExportMenuOpen(
+															false
+														);
+													}}
+													className="w-full text-left px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center transition-colors"
+													disabled={
+														exporting
+													}
+												>
+													<FileText className="h-4 w-4 mr-2 text-slate-500" />
+													<span>
+														Simple
+														Text PDF
+													</span>
+												</button>
+												<hr className="my-1 border-slate-200 dark:border-slate-600" />
+												<button
+													onClick={() => {
+														handleExportPatients(
+															"csv"
+														);
+														setExportMenuOpen(
+															false
+														);
+													}}
+													className="w-full text-left px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center transition-colors"
+													disabled={
+														exporting
+													}
+												>
+													<Download className="h-4 w-4 mr-2 text-slate-500" />
+													<span>
+														Patient
+														Data CSV
+													</span>
+												</button>
+												<button
+													onClick={() => {
+														handleExportPatients(
+															"json"
+														);
+														setExportMenuOpen(
+															false
+														);
+													}}
+													className="w-full text-left px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center transition-colors"
+													disabled={
+														exporting
+													}
+												>
+													<Download className="h-4 w-4 mr-2 text-slate-500" />
+													<span>
+														Patient
+														Data JSON
+													</span>
+												</button>
+											</div>
+										</div>
+									)}
+								</div>
 							</div>
 						</div>
 					</div>
 				</header>
 
-				<div className="p-6">
+				<div
+					className="p-6"
+					data-dashboard-content
+				>
+					{/* Export loading overlay */}
+					{exporting && (
+						<div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+							<div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-xl max-w-sm w-full mx-4">
+								<div className="flex items-center space-x-3">
+									<div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-600"></div>
+									<div>
+										<h3 className="font-medium text-slate-900 dark:text-slate-100">
+											Generating Export...
+										</h3>
+										<p className="text-sm text-slate-500 dark:text-slate-400">
+											Please wait while we
+											prepare your file
+										</p>
+									</div>
+								</div>
+							</div>
+						</div>
+					)}
+
 					{error && (
 						<div className="mb-6 p-4 bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-300">
-							{error}
+							<div className="flex items-start space-x-2">
+								<AlertTriangle className="h-5 w-5 mt-0.5 flex-shrink-0" />
+								<div>
+									<h4 className="font-medium">
+										Export Error
+									</h4>
+									<p className="text-sm mt-1">
+										{error}
+									</p>
+									<div className="mt-2 text-xs opacity-75">
+										<p className="mb-1">
+											Try these alternatives:
+										</p>
+										<ul className="list-disc list-inside space-y-1 ml-2">
+											<li>
+												Use "Simple Text
+												PDF" from the export
+												menu
+											</li>
+											<li>
+												Export individual
+												sections instead
+											</li>
+											<li>
+												Refresh the page and
+												try again
+											</li>
+											<li>
+												Check browser
+												console for details
+											</li>
+										</ul>
+									</div>
+								</div>
+							</div>
 						</div>
 					)}
 
@@ -1076,12 +1423,8 @@ export default function PPSDashboard() {
 										<div className="text-2xl font-bold text-blue-900 dark:text-blue-100">
 											{loading
 												? "..."
-												: filteredStats?.patients_on_antibiotic &&
-												  antibioticStats?.total_antibiotics
-												? (
-														antibioticStats.total_antibiotics /
-														filteredStats.patients_on_antibiotic
-												  ).toFixed(1)
+												: allBasicMetrics
+												? allBasicMetrics.average_antibiotics_per_patient
 												: "0.0"}
 										</div>
 										<p className="text-xs text-blue-600 dark:text-blue-400">
@@ -1110,13 +1453,9 @@ export default function PPSDashboard() {
 										<div className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
 											{loading
 												? "..."
-												: filteredStats?.total_patients
-												? `${(
-														(filteredStats.patients_on_antibiotic /
-															filteredStats.total_patients) *
-														100
-												  ).toFixed(1)}%`
-												: "0.0%"}
+												: allBasicMetrics
+												? allBasicMetrics.percentage_encounter_with_antibiotic
+												: "0.0"}
 										</div>
 										<p className="text-xs text-emerald-600 dark:text-emerald-400">
 											N:{" "}
@@ -1144,7 +1483,11 @@ export default function PPSDashboard() {
 										<div className="text-2xl font-bold text-purple-900 dark:text-purple-100">
 											{loading
 												? "..."
-												: "78.5%"}
+												: allGenericMetrics
+												? Math.floor(
+														allGenericMetrics?.percentage_generic_prescriptions
+												  )
+												: "0.0"}
 										</div>
 										<p className="text-xs text-purple-600 dark:text-purple-400">
 											Generic vs brand name
@@ -1168,14 +1511,9 @@ export default function PPSDashboard() {
 										<div className="text-2xl font-bold text-amber-900 dark:text-amber-100">
 											{loading
 												? "..."
-												: specimenStats?.total_specimens &&
-												  filteredStats?.patients_on_antibiotic
-												? `${(
-														(specimenStats.total_specimens /
-															filteredStats.patients_on_antibiotic) *
-														100
-												  ).toFixed(1)}%`
-												: "0.0%"}
+												: allCultureMetrics
+												? allCultureMetrics?.percentage_culture_based_prescriptions
+												: "0.0"}
 										</div>
 										<p className="text-xs text-amber-600 dark:text-amber-400">
 											N:{" "}
@@ -1203,7 +1541,9 @@ export default function PPSDashboard() {
 										<div className="text-xl font-bold text-slate-900 dark:text-slate-100">
 											{loading
 												? "..."
-												: "82.1%"}
+												: allGuideMetrics
+												? allGuideMetrics?.percentage_guideline_compliant
+												: "0.0"}
 										</div>
 										<p className="text-xs text-muted-foreground mt-1">
 											Prescriptions following
@@ -1224,7 +1564,9 @@ export default function PPSDashboard() {
 										<div className="text-xl font-bold text-slate-900 dark:text-slate-100">
 											{loading
 												? "..."
-												: "89.4%"}
+												: allDiagnosisMetrics
+												? allDiagnosisMetrics?.percentage_appropriate_diagnosis
+												: "0.0"}
 										</div>
 										<p className="text-xs text-muted-foreground mt-1">
 											Prescriptions with
@@ -1936,7 +2278,29 @@ export default function PPSDashboard() {
 
 					{activeSection === "overview" && (
 						<div className="space-y-6">
-							<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+							<div className="flex justify-between items-center mb-6">
+								<h2 className="text-2xl font-bold">
+									Overview Dashboard
+								</h2>
+								<Button
+									variant="outline"
+									size="sm"
+									onClick={() =>
+										ExportService.exportSectionToPDF(
+											"overview-content",
+											"Overview"
+										)
+									}
+									disabled={exporting}
+								>
+									<Download className="h-4 w-4 mr-2" />
+									Export Overview
+								</Button>
+							</div>
+							<div
+								id="overview-content"
+								className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+							>
 								<Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
 									<CardHeader>
 										<CardTitle className="flex items-center gap-2">
@@ -2132,7 +2496,44 @@ export default function PPSDashboard() {
 
 					{activeSection === "analytics" && (
 						<div className="space-y-6">
-							<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+							<div className="flex justify-between items-center mb-6">
+								<h2 className="text-2xl font-bold">
+									Analytics Dashboard
+								</h2>
+								<div className="flex gap-2">
+									<Button
+										variant="outline"
+										size="sm"
+										onClick={() =>
+											ExportService.exportSectionToPDF(
+												"analytics-content",
+												"Analytics"
+											)
+										}
+										disabled={exporting}
+									>
+										<Download className="h-4 w-4 mr-2" />
+										Export Section
+									</Button>
+									<Button
+										variant="outline"
+										size="sm"
+										onClick={() =>
+											handleExportAntibiotics(
+												"csv"
+											)
+										}
+										disabled={exporting}
+									>
+										<Download className="h-4 w-4 mr-2" />
+										Export Data
+									</Button>
+								</div>
+							</div>
+							<div
+								id="analytics-content"
+								className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+							>
 								<Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
 									<CardHeader>
 										<CardTitle className="flex items-center gap-2">
@@ -2435,7 +2836,44 @@ export default function PPSDashboard() {
 
 					{activeSection === "patients" && (
 						<div className="space-y-6">
-							<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+							<div className="flex justify-between items-center mb-6">
+								<h2 className="text-2xl font-bold">
+									Patient Analytics
+								</h2>
+								<div className="flex gap-2">
+									<Button
+										variant="outline"
+										size="sm"
+										onClick={() =>
+											ExportService.exportSectionToPDF(
+												"patients-content",
+												"Patient Analytics"
+											)
+										}
+										disabled={exporting}
+									>
+										<Download className="h-4 w-4 mr-2" />
+										Export Charts
+									</Button>
+									<Button
+										variant="outline"
+										size="sm"
+										onClick={() =>
+											handleExportPatients(
+												"csv"
+											)
+										}
+										disabled={exporting}
+									>
+										<Download className="h-4 w-4 mr-2" />
+										Export Data
+									</Button>
+								</div>
+							</div>
+							<div
+								id="patients-content"
+								className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+							>
 								<Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
 									<CardHeader>
 										<CardTitle>
@@ -2534,7 +2972,31 @@ export default function PPSDashboard() {
 
 					{activeSection === "specimens" && (
 						<div className="space-y-6">
-							<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+							<div className="flex justify-between items-center mb-6">
+								<h2 className="text-2xl font-bold">
+									Specimen Analysis
+								</h2>
+								<div className="flex gap-2">
+									<Button
+										variant="outline"
+										size="sm"
+										onClick={() =>
+											ExportService.exportSectionToPDF(
+												"specimens-content",
+												"Specimen Analysis"
+											)
+										}
+										disabled={exporting}
+									>
+										<Download className="h-4 w-4 mr-2" />
+										Export Charts
+									</Button>
+								</div>
+							</div>
+							<div
+								id="specimens-content"
+								className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+							>
 								<Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
 									<CardHeader>
 										<CardTitle>
@@ -2670,14 +3132,31 @@ export default function PPSDashboard() {
 						<div className="space-y-6">
 							<Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
 								<CardHeader>
-									<CardTitle className="flex items-center gap-2">
-										<Upload className="h-5 w-5 text-emerald-600" />
-										Data Upload
-									</CardTitle>
-									<CardDescription>
-										Upload CSV files to import
-										survey data
-									</CardDescription>
+									<div className="flex items-center justify-between">
+										<div>
+											<CardTitle className="flex items-center gap-2">
+												<Upload className="h-5 w-5 text-emerald-600" />
+												Data Upload
+											</CardTitle>
+											<CardDescription>
+												Upload CSV files to
+												import survey data
+											</CardDescription>
+										</div>
+										<Button
+											variant="outline"
+											size="sm"
+											onClick={() =>
+												handleExportPatients(
+													"csv"
+												)
+											}
+											disabled={exporting}
+										>
+											<Download className="h-4 w-4 mr-2" />
+											Export Template
+										</Button>
+									</div>
 								</CardHeader>
 								<CardContent>
 									<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -2726,13 +3205,59 @@ export default function PPSDashboard() {
 						<div className="space-y-6">
 							<Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
 								<CardHeader>
-									<CardTitle className="flex items-center gap-2">
-										<Database className="h-5 w-5 text-slate-600" />
-										Recent Patients
-									</CardTitle>
-									<CardDescription>
-										Latest patient survey data
-									</CardDescription>
+									<div className="flex items-center justify-between">
+										<div>
+											<CardTitle className="flex items-center gap-2">
+												<Database className="h-5 w-5 text-slate-600" />
+												Recent Patients
+											</CardTitle>
+											<CardDescription>
+												Latest patient
+												survey data
+											</CardDescription>
+										</div>
+										<div className="flex gap-2">
+											<Button
+												variant="outline"
+												size="sm"
+												onClick={() =>
+													handleExportPatients(
+														"csv"
+													)
+												}
+												disabled={exporting}
+											>
+												<Download className="h-4 w-4 mr-2" />
+												CSV
+											</Button>
+											<Button
+												variant="outline"
+												size="sm"
+												onClick={() =>
+													handleExportPatients(
+														"json"
+													)
+												}
+												disabled={exporting}
+											>
+												<Download className="h-4 w-4 mr-2" />
+												JSON
+											</Button>
+											<Button
+												variant="outline"
+												size="sm"
+												onClick={() =>
+													handleExportPatients(
+														"pdf"
+													)
+												}
+												disabled={exporting}
+											>
+												<Download className="h-4 w-4 mr-2" />
+												PDF
+											</Button>
+										</div>
+									</div>
 								</CardHeader>
 								<CardContent>
 									<div className="overflow-x-auto">
