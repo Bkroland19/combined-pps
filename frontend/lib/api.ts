@@ -205,6 +205,13 @@ export class PPSApi {
         return response.json()
     }
 
+    static async getPatientDaysMetric(): Promise<any> {
+        const response = await fetch(`${this.baseUrl}/api/v1/pps/long-stay-patients`)
+        if (!response.ok) throw new Error('Failed to fetch')
+        
+        return response.json()
+    }
+
     static async getDiagnosisMetric(): Promise<any> {
         const response = await fetch(`${this.baseUrl}/api/v1/pps/diagnosis-metrics`)
         if (!response.ok) throw new Error('Failed to fetch')

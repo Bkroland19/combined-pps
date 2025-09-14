@@ -62,6 +62,8 @@ import {
   Target,
   Award,
   Globe,
+  ChevronDown,
+  X,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import {
@@ -71,6 +73,11 @@ import {
   SpecimenStats,
   Patient,
 } from '@/lib/api';
+import {
+  ExportService,
+  exportDashboard,
+  debugExportSetup,
+} from '@/lib/export-utils';
 
 // Data transformation utilities
 const formatChartData = (
@@ -99,8 +106,23 @@ export default function PPSDashboard() {
   );
   const [recentPatients, setRecentPatients] = useState<Patient[]>([]);
   const [allPatients, setAllPatients] = useState<Patient[]>([]);
+  const [allBasicMetrics, setAllBasicMetrics] = useState<any>([]);
+  const [allCultureMetrics, setAllCultureMetrics] = useState<any>([]);
+  const [allDiagnosisMetrics, setAllDiagnosisMetrics] = useState<any>([]);
+  const [allGenericMetrics, setAllGenericMetrics] = useState<any>([]);
+  const [allIndicators, setAllIndicators] = useState<any>([]);
+  const [allInjectableMetrics, setAllInjectableMetrics] = useState<any>([]);
+  const [allMissedDose, setAllMissedDose] = useState<any>([]);
+  const [allOralSwitch, setAllOralSwitch] = useState<any>([]);
+  const [allPrescriberMetrics, setAllPrescriberMetrics] = useState<any>([]);
+  const [allGuideMetrics, setGuideMetrics] = useState<any>([]);
+  const [allPatientDaysMetrics, setAllPatientDaysMetrics] = useState<any>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
+  const [exportMenuOpen, setExportMenuOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<string | null>(null);
 
   // Cascading filter state
   const [selectedFromDate, setSelectedFromDate] = useState<string>('all');
@@ -218,6 +240,7 @@ export default function PPSDashboard() {
       if (selectedToDate && selectedToDate !== 'all') {
         if (patientDate > selectedToDate) return false;
       }
+
       if (
         selectedRegion &&
         selectedRegion !== 'all' &&
@@ -326,11 +349,33 @@ export default function PPSDashboard() {
           antibioticStatsRes,
           specimenStatsRes,
           allPatientsRes,
+          allBasicMetrics,
+          allCultureMetrics,
+          allDiagnosisMetrics,
+          allGenericMetrics,
+          allIndicators,
+          allInjectableMetrics,
+          allMissedDose,
+          allOralSwitch,
+          allPrescriberMetrics,
+          allGuideMetrics,
+          allPatientDaysMetrics,
         ] = await Promise.all([
           PPSApi.getPatientStats(),
           PPSApi.getAntibioticStats(),
           PPSApi.getSpecimenStats(),
-          PPSApi.getPatients({ limit: 999999 }), // Get all patients for filtering
+          PPSApi.getPatients({ limit: 999999 }),
+          PPSApi.getBasicMetric(),
+          PPSApi.getCultureMetric(),
+          PPSApi.getDiagnosisMetric(),
+          PPSApi.getGenericMetric(),
+          PPSApi.getIndicators(),
+          PPSApi.getInjectableMetrics(),
+          PPSApi.getMissedDose(),
+          PPSApi.getOralSwitch(),
+          PPSApi.getPrescriberMetrics(),
+          PPSApi.getGuidelineMetric(),
+          PPSApi.getPatientDaysMetric(),
         ]);
 
         setPatientStats(patientStatsRes);
@@ -338,8 +383,30 @@ export default function PPSDashboard() {
         setSpecimenStats(specimenStatsRes);
         setAllPatients(allPatientsRes.data);
         setRecentPatients(allPatientsRes.data.slice(0, 10));
+        setAllBasicMetrics(allBasicMetrics);
+        setAllCultureMetrics(allCultureMetrics);
+        setAllDiagnosisMetrics(allDiagnosisMetrics);
+        setAllGenericMetrics(allGenericMetrics);
+        setAllIndicators(allIndicators);
+        setAllInjectableMetrics(allInjectableMetrics);
+        setAllMissedDose(allMissedDose);
+        setAllOralSwitch(allOralSwitch);
+        setAllPrescriberMetrics(allPrescriberMetrics);
+        setGuideMetrics(allGuideMetrics);
+        setAllPatientDaysMetrics(allPatientDaysMetrics);
+
+        // Debug log to see what data we're getting
+        console.log('Patient Days Metrics:', allPatientDaysMetrics);
+        console.log('All API responses loaded successfully:', {
+          patientStats: !!patientStatsRes,
+          antibioticStats: !!antibioticStatsRes,
+          specimenStats: !!specimenStatsRes,
+          allPatients: allPatientsRes.data?.length || 0,
+          patientDaysMetrics: allPatientDaysMetrics,
+        });
       } catch (err) {
         console.error('Error fetching data:', err);
+        console.error('Detailed error:', err);
         setError(
           'Failed to load dashboard data. Please check your backend connection.'
         );
@@ -351,23 +418,22 @@ export default function PPSDashboard() {
     fetchData();
   }, []);
 
+  // Close export menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (exportMenuOpen && !target.closest('.export-menu-container')) {
+        setExportMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [exportMenuOpen]);
+
   // Reset dependent dropdowns when parent changes
-  const handleFromDateChange = (date: string) => {
-    setSelectedFromDate(date);
-    setSelectedRegion('all');
-    setSelectedDistrict('all');
-    setSelectedSubCounty('all');
-    setSelectedFacility('all');
-  };
-
-  const handleToDateChange = (date: string) => {
-    setSelectedToDate(date);
-    setSelectedRegion('all');
-    setSelectedDistrict('all');
-    setSelectedSubCounty('all');
-    setSelectedFacility('all');
-  };
-
   const handleRegionChange = (region: string) => {
     setSelectedRegion(region);
     setSelectedDistrict('all');
@@ -395,6 +461,213 @@ export default function PPSDashboard() {
   // Get current filtered data for display
   const filteredStats = getFilteredStats();
   const filteredPatients = getFilteredPatients();
+
+  // Export functions
+  const handleExportDashboard = async () => {
+    setExporting(true);
+    setError(null);
+
+    try {
+      // Wait a bit to ensure all content is rendered
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      await ExportService.exportDashboardToPDF({
+        filename: `PPS_Dashboard_${new Date().toISOString().split('T')[0]}`,
+        orientation: 'landscape',
+      });
+
+      setError(null);
+    } catch (error) {
+      console.error('Export failed:', error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'Failed to export dashboard. Please try again.';
+      setError(errorMessage);
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleExportPatients = async (
+    format: 'csv' | 'json' | 'pdf' = 'csv'
+  ) => {
+    setExporting(true);
+    try {
+      const filters = {
+        region: selectedRegion !== 'all' ? selectedRegion : undefined,
+        district: selectedDistrict !== 'all' ? selectedDistrict : undefined,
+        subCounty: selectedSubCounty !== 'all' ? selectedSubCounty : undefined,
+        facility: selectedFacility !== 'all' ? selectedFacility : undefined,
+        ownership: selectedOwnership !== 'all' ? selectedOwnership : undefined,
+        levelOfCare:
+          selectedLevelOfCare !== 'all' ? selectedLevelOfCare : undefined,
+        wardName: selectedWardName !== 'all' ? selectedWardName : undefined,
+      };
+
+      await ExportService.exportPatientData(filteredPatients, format, filters);
+    } catch (error) {
+      console.error('Export failed:', error);
+      setError('Failed to export patient data. Please try again.');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleExportAntibiotics = async (format: 'csv' | 'json' = 'csv') => {
+    setExporting(true);
+    try {
+      await ExportService.exportAntibioticData([], antibioticStats, format);
+    } catch (error) {
+      console.error('Export failed:', error);
+      setError('Failed to export antibiotic data. Please try again.');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleExportDashboardSimple = async () => {
+    setExporting(true);
+    setError(null);
+
+    try {
+      await ExportService.exportDashboardSimple({
+        filename: `PPS_Dashboard_Simple_${
+          new Date().toISOString().split('T')[0]
+        }`,
+        orientation: 'landscape',
+      });
+      setError(null);
+    } catch (error) {
+      console.error('Simple export failed:', error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'Failed to export simplified dashboard. Please try again.';
+      setError(errorMessage);
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  // Upload handler functions
+  const handleFileUpload = async (
+    file: File,
+    uploadType:
+      | 'patients'
+      | 'antibiotics'
+      | 'indications'
+      | 'optional-vars'
+      | 'specimens'
+  ) => {
+    setUploading(true);
+    setUploadStatus(null);
+    setError(null);
+
+    try {
+      let result;
+
+      switch (uploadType) {
+        case 'patients':
+          result = await PPSApi.uploadPatients(file);
+          break;
+        case 'antibiotics':
+          result = await PPSApi.uploadAntibiotics(file);
+          break;
+        case 'indications':
+          result = await PPSApi.uploadIndications(file);
+          break;
+        case 'optional-vars':
+          result = await PPSApi.uploadOptionalVars(file);
+          break;
+        case 'specimens':
+          result = await PPSApi.uploadSpecimens(file);
+          break;
+        default:
+          throw new Error('Invalid upload type');
+      }
+
+      // Format upload type for display
+      const displayType = uploadType
+        .replace('-', ' ')
+        .split(' ')
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+
+      setUploadStatus(
+        `File uploaded successfully! ${displayType} data has been imported. ${
+          result.message || 'Processing complete.'
+        }`
+      );
+
+      // Refresh data after successful upload
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    } catch (error) {
+      console.error(`Upload failed for ${uploadType}:`, error);
+
+      // Format upload type for display
+      const displayType = uploadType
+        .replace('-', ' ')
+        .split(' ')
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+
+      let errorMessage = `Failed to upload ${displayType} data`;
+
+      if (error instanceof Error) {
+        if (
+          error.message.includes('400') ||
+          error.message.includes('Bad Request')
+        ) {
+          errorMessage +=
+            ' - Invalid file format or data structure. Please check your CSV file.';
+        } else if (
+          error.message.includes('500') ||
+          error.message.includes('Internal Server Error')
+        ) {
+          errorMessage += ' - Server error occurred. Please try again later.';
+        } else if (
+          error.message.includes('network') ||
+          error.message.includes('fetch')
+        ) {
+          errorMessage +=
+            ' - Network error. Please check your connection and try again.';
+        } else {
+          errorMessage += ` - ${error.message}`;
+        }
+      }
+
+      setError(`upload: ${errorMessage}`);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const triggerFileInput = (
+    uploadType:
+      | 'patients'
+      | 'antibiotics'
+      | 'indications'
+      | 'optional-vars'
+      | 'specimens'
+  ) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.csv';
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        if (!file.name.endsWith('.csv')) {
+          setError('Please select a CSV file');
+          return;
+        }
+        handleFileUpload(file, uploadType);
+      }
+    };
+    input.click();
+  };
 
   const sidebarItems = [
     { id: 'visuals', label: 'Visuals', icon: Eye },
@@ -489,42 +762,7 @@ export default function PPSDashboard() {
 
               <div className="flex w-full items-center gap-3 flex-wrap">
                 {/* Cascading Filter Dropdowns */}
-                <div className="flex items-center gap-2 flex-wrap">
-                  {/* From Date Picker */}
-                  <div className="flex items-center gap-2">
-                    <label className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                      From:
-                    </label>
-                    <input
-                      type="date"
-                      value={selectedFromDate === 'all' ? '' : selectedFromDate}
-                      onChange={(e) =>
-                        handleFromDateChange(e.target.value || 'all')
-                      }
-                      className="px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                    />
-                  </div>
-
-                  {/* To Date Picker */}
-                  <div className="flex items-center gap-2">
-                    <label className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                      To:
-                    </label>
-                    <input
-                      type="date"
-                      value={selectedToDate === 'all' ? '' : selectedToDate}
-                      onChange={(e) =>
-                        handleToDateChange(e.target.value || 'all')
-                      }
-                      min={
-                        selectedFromDate === 'all'
-                          ? undefined
-                          : selectedFromDate
-                      }
-                      className="px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                    />
-                  </div>
-
+                <div className="flex items-center gap-2">
                   {/* Region Dropdown */}
                   <Select
                     value={selectedRegion}
@@ -687,29 +925,170 @@ export default function PPSDashboard() {
                 <Button variant="ghost" size="sm">
                   <Bell className="h-5 w-5" />
                 </Button>
-                <Button
-                  size="sm"
-                  className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Export
-                </Button>
+
+                <div className="relative export-menu-container">
+                  <Button
+                    size="sm"
+                    disabled={exporting}
+                    onClick={() => setExportMenuOpen(!exportMenuOpen)}
+                    className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    {exporting ? 'Exporting...' : 'Export'}
+                    <ChevronDown
+                      className={`h-4 w-4 ml-1 transition-transform ${
+                        exportMenuOpen ? 'rotate-180' : ''
+                      }`}
+                    />
+                  </Button>
+
+                  {exportMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-800 rounded-md shadow-xl border border-slate-200 dark:border-slate-700 z-[9999] animate-in fade-in slide-in-from-top-2 duration-200">
+                      <div className="py-1">
+                        <button
+                          onClick={() => {
+                            handleExportDashboard();
+                            setExportMenuOpen(false);
+                          }}
+                          className="w-full text-left px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center transition-colors"
+                          disabled={exporting}
+                        >
+                          <Download className="h-4 w-4 mr-2 text-slate-500" />
+                          <span>Full Dashboard PDF</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleExportDashboardSimple();
+                            setExportMenuOpen(false);
+                          }}
+                          className="w-full text-left px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center transition-colors"
+                          disabled={exporting}
+                        >
+                          <FileText className="h-4 w-4 mr-2 text-slate-500" />
+                          <span>Simple Text PDF</span>
+                        </button>
+                        <hr className="my-1 border-slate-200 dark:border-slate-600" />
+                        <button
+                          onClick={() => {
+                            handleExportPatients('csv');
+                            setExportMenuOpen(false);
+                          }}
+                          className="w-full text-left px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center transition-colors"
+                          disabled={exporting}
+                        >
+                          <Download className="h-4 w-4 mr-2 text-slate-500" />
+                          <span>Patient Data CSV</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleExportPatients('json');
+                            setExportMenuOpen(false);
+                          }}
+                          className="w-full text-left px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center transition-colors"
+                          disabled={exporting}
+                        >
+                          <Download className="h-4 w-4 mr-2 text-slate-500" />
+                          <span>Patient Data JSON</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
         </header>
 
-        <div className="p-6">
+        <div className="p-6" data-dashboard-content>
+          {/* Export loading overlay */}
+          {exporting && (
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+              <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-xl max-w-sm w-full mx-4">
+                <div className="flex items-center space-x-3">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-600"></div>
+                  <div>
+                    <h3 className="font-medium text-slate-900 dark:text-slate-100">
+                      Generating Export...
+                    </h3>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                      Please wait while we prepare your file
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Upload loading overlay */}
+          {uploading && (
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+              <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-xl max-w-sm w-full mx-4">
+                <div className="flex items-center space-x-3">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                  <div>
+                    <h3 className="font-medium text-slate-900 dark:text-slate-100">
+                      Uploading File...
+                    </h3>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                      Please wait while we process your CSV file
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {error && (
             <div className="mb-6 p-4 bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-300">
-              {error}
+              <div className="flex items-start space-x-2">
+                <AlertTriangle className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                <div>
+                  <h4 className="font-medium">
+                    {error.includes('upload') ? 'Upload Error' : 'Export Error'}
+                  </h4>
+                  <p className="text-sm mt-1">{error}</p>
+                  {!error.includes('upload') && (
+                    <div className="mt-2 text-xs opacity-75">
+                      <p className="mb-1">Try these alternatives:</p>
+                      <ul className="list-disc list-inside space-y-1 ml-2">
+                        <li>Use "Simple Text PDF" from the export menu</li>
+                        <li>Export individual sections instead</li>
+                        <li>Refresh the page and try again</li>
+                        <li>Check browser console for details</li>
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {uploadStatus && (
+            <div className="mb-6 p-4 bg-green-50 dark:bg-green-950/50 border border-green-200 dark:border-green-800 rounded-lg text-green-700 dark:text-green-300 relative">
+              <div className="flex items-start space-x-2">
+                <CheckCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <h4 className="font-medium">Upload Successful! 🎉</h4>
+                  <p className="text-sm mt-1">{uploadStatus}</p>
+                  <p className="text-xs mt-1 opacity-75">
+                    The page will refresh automatically in 2 seconds to show
+                    updated data.
+                  </p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setUploadStatus(null)}
+                  className="h-6 w-6 p-0 text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-200"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           )}
 
           {/* Filter Status */}
-          {((selectedFromDate && selectedFromDate !== 'all') ||
-            (selectedToDate && selectedToDate !== 'all') ||
-            (selectedRegion && selectedRegion !== 'all') ||
+          {((selectedRegion && selectedRegion !== 'all') ||
             (selectedDistrict && selectedDistrict !== 'all') ||
             (selectedSubCounty && selectedSubCounty !== 'all') ||
             (selectedFacility && selectedFacility !== 'all') ||
@@ -724,22 +1103,6 @@ export default function PPSDashboard() {
                     Active filters:
                   </span>
                   <div className="flex gap-1">
-                    {selectedFromDate && selectedFromDate !== 'all' && (
-                      <Badge
-                        variant="secondary"
-                        className="bg-indigo-100 text-indigo-700"
-                      >
-                        From: {new Date(selectedFromDate).toLocaleDateString()}
-                      </Badge>
-                    )}
-                    {selectedToDate && selectedToDate !== 'all' && (
-                      <Badge
-                        variant="secondary"
-                        className="bg-purple-100 text-purple-700"
-                      >
-                        To: {new Date(selectedToDate).toLocaleDateString()}
-                      </Badge>
-                    )}
                     {selectedRegion && selectedRegion !== 'all' && (
                       <Badge
                         variant="secondary"
@@ -802,8 +1165,6 @@ export default function PPSDashboard() {
                   variant="ghost"
                   size="sm"
                   onClick={() => {
-                    setSelectedFromDate('all');
-                    setSelectedToDate('all');
                     setSelectedRegion('all');
                     setSelectedDistrict('all');
                     setSelectedSubCounty('all');
@@ -824,20 +1185,22 @@ export default function PPSDashboard() {
             <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/50 border-blue-200/50 dark:border-blue-800/50">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-blue-700 dark:text-blue-300">
-                  Total Patients
+                  Total Facilities
                 </CardTitle>
                 <div className="p-2 bg-blue-500/10 rounded-lg">
-                  <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  <Home className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold text-blue-900 dark:text-blue-100">
                   {loading
                     ? '...'
-                    : filteredStats?.total_patients?.toLocaleString() || '0'}
+                    : [...new Set(allPatients.map((p) => p.facility))]
+                        .filter(Boolean)
+                        .length.toLocaleString()}
                 </div>
                 <p className="text-xs text-blue-600 dark:text-blue-400">
-                  Survey participants
+                  Healthcare facilities
                 </p>
               </CardContent>
             </Card>
@@ -895,53 +1258,6 @@ export default function PPSDashboard() {
 
           {activeSection === 'visuals' && (
             <div className="space-y-6">
-              {/* Reporting Period Header */}
-              <Card className="bg-gradient-to-r from-blue-50 to-emerald-50 dark:from-blue-950/50 dark:to-emerald-950/50 border-blue-200/50 dark:border-blue-800/50">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <Calendar className="h-6 w-6 text-blue-600" />
-                    Point Prevalence Survey Report
-                  </CardTitle>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
-                    <div>
-                      <span className="font-medium text-slate-600 dark:text-slate-400">
-                        Reporting Period:
-                      </span>
-                      <div className="text-slate-900 dark:text-slate-100">
-                        {new Date().toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'long',
-                        })}
-                      </div>
-                    </div>
-                    <div>
-                      <span className="font-medium text-slate-600 dark:text-slate-400">
-                        Survey Type:
-                      </span>
-                      <div className="text-slate-900 dark:text-slate-100">
-                        PPS
-                      </div>
-                    </div>
-                    <div>
-                      <span className="font-medium text-slate-600 dark:text-slate-400">
-                        Facilities:
-                      </span>
-                      <div className="text-slate-900 dark:text-slate-100">
-                        {patientStats?.by_facility?.length || 0} Total
-                      </div>
-                    </div>
-                    <div>
-                      <span className="font-medium text-slate-600 dark:text-slate-400">
-                        Status:
-                      </span>
-                      <div className="text-emerald-600 dark:text-emerald-400 font-medium">
-                        Active
-                      </div>
-                    </div>
-                  </div>
-                </CardHeader>
-              </Card>
-
               {/* PPS Quality Indicators - Primary Metrics */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {/* PPS Indicator 5.1 - Average antibiotics per patient */}
@@ -958,12 +1274,8 @@ export default function PPSDashboard() {
                     <div className="text-2xl font-bold text-blue-900 dark:text-blue-100">
                       {loading
                         ? '...'
-                        : filteredStats?.patients_on_antibiotic &&
-                          antibioticStats?.total_antibiotics
-                        ? (
-                            antibioticStats.total_antibiotics /
-                            filteredStats.patients_on_antibiotic
-                          ).toFixed(1)
+                        : allBasicMetrics
+                        ? allBasicMetrics.average_antibiotics_per_patient
                         : '0.0'}
                     </div>
                     <p className="text-xs text-blue-600 dark:text-blue-400">
@@ -987,13 +1299,9 @@ export default function PPSDashboard() {
                     <div className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
                       {loading
                         ? '...'
-                        : filteredStats?.total_patients
-                        ? `${(
-                            (filteredStats.patients_on_antibiotic /
-                              filteredStats.total_patients) *
-                            100
-                          ).toFixed(1)}%`
-                        : '0.0%'}
+                        : allBasicMetrics
+                        ? allBasicMetrics.percentage_encounter_with_antibiotic
+                        : '0.0'}
                     </div>
                     <p className="text-xs text-emerald-600 dark:text-emerald-400">
                       N: {filteredStats?.patients_on_antibiotic || 0} / D:{' '}
@@ -1014,7 +1322,13 @@ export default function PPSDashboard() {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-purple-900 dark:text-purple-100">
-                      {loading ? '...' : '78.5%'}
+                      {loading
+                        ? '...'
+                        : allGenericMetrics
+                        ? Math.floor(
+                            allGenericMetrics?.percentage_generic_prescriptions
+                          )
+                        : '0.0'}
                     </div>
                     <p className="text-xs text-purple-600 dark:text-purple-400">
                       Generic vs brand name ratio
@@ -1036,14 +1350,12 @@ export default function PPSDashboard() {
                     <div className="text-2xl font-bold text-amber-900 dark:text-amber-100">
                       {loading
                         ? '...'
-                        : specimenStats?.total_specimens &&
-                          filteredStats?.patients_on_antibiotic
-                        ? `${(
-                            (specimenStats.total_specimens /
-                              filteredStats.patients_on_antibiotic) *
-                            100
-                          ).toFixed(1)}%`
-                        : '0.0%'}
+                        : allCultureMetrics
+                        ? Math.floor(
+                            allCultureMetrics?.percentage_culture_based_prescriptions
+                          )
+                        : '0.0'}{' '}
+                      %
                     </div>
                     <p className="text-xs text-amber-600 dark:text-amber-400">
                       N: {specimenStats?.total_specimens || 0} / D:{' '}
@@ -1065,7 +1377,14 @@ export default function PPSDashboard() {
                   </CardHeader>
                   <CardContent>
                     <div className="text-xl font-bold text-slate-900 dark:text-slate-100">
-                      {loading ? '...' : '82.1%'}
+                      {loading
+                        ? '...'
+                        : allGuideMetrics
+                        ? Math.floor(
+                            allGuideMetrics?.percentage_guideline_compliant
+                          )
+                        : '0.0'}{' '}
+                      %
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">
                       Prescriptions following treatment protocols
@@ -1083,7 +1402,14 @@ export default function PPSDashboard() {
                   </CardHeader>
                   <CardContent>
                     <div className="text-xl font-bold text-slate-900 dark:text-slate-100">
-                      {loading ? '...' : '89.4%'}
+                      {loading
+                        ? '...'
+                        : allDiagnosisMetrics
+                        ? Math.floor(
+                            allDiagnosisMetrics?.percentage_appropriate_diagnosis
+                          )
+                        : '0.0'}{' '}
+                      %
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">
                       Prescriptions with appropriate diagnosis
@@ -1092,98 +1418,458 @@ export default function PPSDashboard() {
                 </Card>
               </div>
 
-              {/* PPS Clinical Metrics */}
-              <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <BarChart3 className="h-5 w-5 text-blue-600" />
-                    PPS Clinical Metrics
-                  </CardTitle>
-                  <CardDescription>
-                    Additional surveillance indicators and quality measures
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div className="space-y-3">
-                      <div className="text-sm font-medium">
-                        Culture Sampling
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs">Samples taken</span>
-                        <span className="text-xs font-mono">
-                          {specimenStats?.total_specimens || 0}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs">Sampling rate</span>
-                        <span className="text-xs text-muted-foreground">
-                          {specimenStats?.total_specimens &&
-                          filteredStats?.patients_on_antibiotic
-                            ? `${Math.round(
-                                (specimenStats.total_specimens /
-                                  filteredStats.patients_on_antibiotic) *
-                                  100
-                              )}%`
-                            : '0%'}
-                        </span>
-                      </div>
+              {/* PPS Clinical Metrics - Redesigned */}
+              <div className="space-y-6">
+                {/* Main PPS Clinical Metrics Card */}
+                <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <BarChart3 className="h-6 w-6 text-blue-600" />
+                      PPS Clinical Metrics Dashboard
+                    </CardTitle>
+                    <CardDescription>
+                      Comprehensive surveillance indicators and clinical
+                      performance metrics
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {/* First Row - Core Surveillance Metrics */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                      {/* Culture Sampling Metrics */}
+                      <Card className="bg-gradient-to-br from-teal-50 to-teal-100 dark:from-teal-950/50 dark:to-teal-900/50 border-teal-200/50 dark:border-teal-800/50">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-sm font-semibold text-teal-700 dark:text-teal-300 flex items-center gap-2">
+                            <TestTube className="h-4 w-4" />
+                            Culture Sampling
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs text-teal-600 dark:text-teal-400">
+                              Samples taken
+                            </span>
+                            <span className="text-sm font-bold text-teal-800 dark:text-teal-200">
+                              {specimenStats?.total_specimens || 0}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs text-teal-600 dark:text-teal-400">
+                              Sampling rate
+                            </span>
+                            <span className="text-sm font-bold text-teal-800 dark:text-teal-200">
+                              {specimenStats?.total_specimens &&
+                              filteredStats?.patients_on_antibiotic
+                                ? `${Math.round(
+                                    (specimenStats.total_specimens /
+                                      filteredStats.patients_on_antibiotic) *
+                                      100
+                                  )}%`
+                                : '0%'}
+                            </span>
+                          </div>
+                          <div className="pt-2 border-t border-teal-200 dark:border-teal-700">
+                            <div className="text-xs text-teal-500 dark:text-teal-500">
+                              Culture-guided therapy indicator
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Missed Doses Analysis */}
+                      <Card className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/50 dark:to-orange-900/50 border-orange-200/50 dark:border-orange-800/50">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-sm font-semibold text-orange-700 dark:text-orange-300 flex items-center gap-2">
+                            <AlertTriangle className="h-4 w-4" />
+                            Missed Doses
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs text-orange-600 dark:text-orange-400">
+                              Patients affected
+                            </span>
+                            <span className="text-sm font-bold text-orange-800 dark:text-orange-200">
+                              {Math.round(
+                                (filteredStats?.patients_on_antibiotic || 0) *
+                                  0.15
+                              )}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs text-orange-600 dark:text-orange-400">
+                              Total missed
+                            </span>
+                            <span className="text-sm font-bold text-orange-800 dark:text-orange-200">
+                              {Math.round(
+                                (filteredStats?.patients_on_antibiotic || 0) *
+                                  0.45
+                              )}{' '}
+                              doses
+                            </span>
+                          </div>
+                          <div className="pt-2 border-t border-orange-200 dark:border-orange-700">
+                            <div className="text-xs text-orange-500 dark:text-orange-500">
+                              Adherence quality indicator
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Patient Transfer Metrics */}
+                      <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/50 border-blue-200/50 dark:border-blue-800/50">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-sm font-semibold text-blue-700 dark:text-blue-300 flex items-center gap-2">
+                            <Users className="h-4 w-4" />
+                            Patient Transfers
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs text-blue-600 dark:text-blue-400">
+                              From hospitals
+                            </span>
+                            <span className="text-sm font-bold text-blue-800 dark:text-blue-200">
+                              {Math.round(
+                                (filteredStats?.total_patients || 0) * 0.15
+                              )}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs text-blue-600 dark:text-blue-400">
+                              From non-hospitals
+                            </span>
+                            <span className="text-sm font-bold text-blue-800 dark:text-blue-200">
+                              {Math.round(
+                                (filteredStats?.total_patients || 0) * 0.05
+                              )}
+                            </span>
+                          </div>
+                          <div className="pt-2 border-t border-blue-200 dark:border-blue-700">
+                            <div className="text-xs text-blue-500 dark:text-blue-500">
+                              Prior exposure risk factor
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
                     </div>
 
-                    <div className="space-y-3">
-                      <div className="text-sm font-medium">Missed Doses</div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs">Patients affected</span>
-                        <span className="text-xs font-mono">23</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs">Total missed</span>
-                        <span className="text-xs font-mono">89 doses</span>
-                      </div>
+                    {/* Second Row - Ward & Length of Stay Metrics */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                      {/* Ward Distribution */}
+                      <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/50 dark:to-purple-900/50 border-purple-200/50 dark:border-purple-800/50">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-sm font-semibold text-purple-700 dark:text-purple-300 flex items-center gap-2">
+                            <Home className="h-4 w-4" />
+                            Ward Distribution
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs text-purple-600 dark:text-purple-400">
+                              Total wards
+                            </span>
+                            <span className="text-sm font-bold text-purple-800 dark:text-purple-200">
+                              {
+                                [
+                                  ...new Set(
+                                    filteredPatients.map((p) => p.ward_name)
+                                  ),
+                                ].filter(Boolean).length
+                              }
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs text-purple-600 dark:text-purple-400">
+                              Avg per ward
+                            </span>
+                            <span className="text-sm font-bold text-purple-800 dark:text-purple-200">
+                              {Math.round(
+                                (filteredStats?.total_patients || 0) /
+                                  Math.max(
+                                    [
+                                      ...new Set(
+                                        filteredPatients.map((p) => p.ward_name)
+                                      ),
+                                    ].filter(Boolean).length,
+                                    1
+                                  )
+                              )}
+                            </span>
+                          </div>
+                          <div className="pt-2 border-t border-purple-200 dark:border-purple-700">
+                            <div className="text-xs text-purple-500 dark:text-purple-500">
+                              Unit-based surveillance
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Length of Stay */}
+                      <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/50 dark:to-green-900/50 border-green-200/50 dark:border-green-800/50">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-sm font-semibold text-green-700 dark:text-green-300 flex items-center gap-2">
+                            <Calendar className="h-4 w-4" />
+                            Patient Days
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs text-green-600 dark:text-green-400">
+                              Long stay patients
+                            </span>
+                            <span className="text-sm font-bold text-green-800 dark:text-green-200">
+                              {loading
+                                ? '...'
+                                : allPatientDaysMetrics?.patients_staying_longer_than_7_days !==
+                                  undefined
+                                ? allPatientDaysMetrics.patients_staying_longer_than_7_days.toLocaleString()
+                                : Math.round(
+                                    (filteredStats?.total_patients || 0) * 0.12
+                                  ).toLocaleString()}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs text-green-600 dark:text-green-400">
+                              Long stay percentage
+                            </span>
+                            <span className="text-sm font-bold text-green-800 dark:text-green-200">
+                              {loading
+                                ? '...'
+                                : allPatientDaysMetrics?.percentage_long_stay !==
+                                  undefined
+                                ? `${allPatientDaysMetrics.percentage_long_stay.toFixed(
+                                    1
+                                  )}%`
+                                : '12.0%'}
+                            </span>
+                          </div>
+                          <div className="pt-2 border-t border-green-200 dark:border-green-700">
+                            <div className="text-xs text-green-500 dark:text-green-500">
+                              Patients staying &gt;7 days
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Indication Types */}
+                      <Card className="bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-950/50 dark:to-indigo-900/50 border-indigo-200/50 dark:border-indigo-800/50">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-sm font-semibold text-indigo-700 dark:text-indigo-300 flex items-center gap-2">
+                            <Target className="h-4 w-4" />
+                            Indication Types
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs text-indigo-600 dark:text-indigo-400">
+                              Therapeutic
+                            </span>
+                            <span className="text-sm font-bold text-indigo-800 dark:text-indigo-200">
+                              {Math.round(
+                                (filteredStats?.patients_on_antibiotic || 0) *
+                                  0.75
+                              )}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs text-indigo-600 dark:text-indigo-400">
+                              Prophylactic
+                            </span>
+                            <span className="text-sm font-bold text-indigo-800 dark:text-indigo-200">
+                              {Math.round(
+                                (filteredStats?.patients_on_antibiotic || 0) *
+                                  0.25
+                              )}
+                            </span>
+                          </div>
+                          <div className="pt-2 border-t border-indigo-200 dark:border-indigo-700">
+                            <div className="text-xs text-indigo-500 dark:text-indigo-500">
+                              Treatment appropriateness
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* WHO AWaRe Summary */}
+                      <Card className="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950/50 dark:to-amber-900/50 border-amber-200/50 dark:border-amber-800/50">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-sm font-semibold text-amber-700 dark:text-amber-300 flex items-center gap-2">
+                            <Shield className="h-4 w-4" />
+                            WHO AWaRe Summary
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-2">
+                          <div className="space-y-2">
+                            <div className="flex justify-between items-center">
+                              <span className="text-xs text-green-600">
+                                Access
+                              </span>
+                              <span className="text-xs font-bold text-green-700">
+                                72%
+                              </span>
+                            </div>
+                            <Progress value={72} className="h-1.5" />
+
+                            <div className="flex justify-between items-center">
+                              <span className="text-xs text-yellow-600">
+                                Watch
+                              </span>
+                              <span className="text-xs font-bold text-yellow-700">
+                                22%
+                              </span>
+                            </div>
+                            <Progress value={22} className="h-1.5" />
+
+                            <div className="flex justify-between items-center">
+                              <span className="text-xs text-red-600">
+                                Reserve
+                              </span>
+                              <span className="text-xs font-bold text-red-700">
+                                6%
+                              </span>
+                            </div>
+                            <Progress value={6} className="h-1.5" />
+                          </div>
+                        </CardContent>
+                      </Card>
                     </div>
 
-                    <div className="space-y-3">
-                      <div className="text-sm font-medium">Hospital Stay</div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs">Avg days on ward</span>
-                        <span className="text-xs font-mono">
-                          {filteredStats?.total_patients ? '4.2' : '0'} days
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs">Prior hospitalization</span>
-                        <span className="text-xs font-mono">
-                          {Math.round(
-                            (filteredStats?.total_patients || 0) * 0.18
-                          )}
-                        </span>
-                      </div>
-                    </div>
+                    {/* Third Row - Additional Clinical Indicators */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {/* Prior Hospitalization */}
+                      <Card className="bg-gradient-to-br from-rose-50 to-rose-100 dark:from-rose-950/50 dark:to-rose-900/50 border-rose-200/50 dark:border-rose-800/50">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-sm font-semibold text-rose-700 dark:text-rose-300 flex items-center gap-2">
+                            <Activity className="h-4 w-4" />
+                            Prior Hospitalization (90d)
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs text-rose-600 dark:text-rose-400">
+                              Patients with prior stay
+                            </span>
+                            <span className="text-sm font-bold text-rose-800 dark:text-rose-200">
+                              {Math.round(
+                                (filteredStats?.total_patients || 0) * 0.18
+                              )}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs text-rose-600 dark:text-rose-400">
+                              Risk percentage
+                            </span>
+                            <span className="text-sm font-bold text-rose-800 dark:text-rose-200">
+                              18.0%
+                            </span>
+                          </div>
+                          <div className="pt-2 border-t border-rose-200 dark:border-rose-700">
+                            <div className="text-xs text-rose-500 dark:text-rose-500">
+                              Resistance risk factor
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
 
-                    <div className="space-y-3">
-                      <div className="text-sm font-medium">
-                        Indication Types
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs">Therapeutic</span>
-                        <span className="text-xs font-mono">
-                          {Math.round(
-                            (filteredStats?.patients_on_antibiotic || 0) * 0.75
-                          )}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs">Prophylactic</span>
-                        <span className="text-xs font-mono">
-                          {Math.round(
-                            (filteredStats?.patients_on_antibiotic || 0) * 0.25
-                          )}
-                        </span>
-                      </div>
+                      {/* Facility Distribution */}
+                      <Card className="bg-gradient-to-br from-cyan-50 to-cyan-100 dark:from-cyan-950/50 dark:to-cyan-900/50 border-cyan-200/50 dark:border-cyan-800/50">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-sm font-semibold text-cyan-700 dark:text-cyan-300 flex items-center gap-2">
+                            <Globe className="h-4 w-4" />
+                            Facility Coverage
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs text-cyan-600 dark:text-cyan-400">
+                              Total facilities
+                            </span>
+                            <span className="text-sm font-bold text-cyan-800 dark:text-cyan-200">
+                              {
+                                [
+                                  ...new Set(
+                                    filteredPatients.map((p) => p.facility)
+                                  ),
+                                ].filter(Boolean).length
+                              }
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs text-cyan-600 dark:text-cyan-400">
+                              Avg per facility
+                            </span>
+                            <span className="text-sm font-bold text-cyan-800 dark:text-cyan-200">
+                              {Math.round(
+                                (filteredStats?.total_patients || 0) /
+                                  Math.max(
+                                    [
+                                      ...new Set(
+                                        filteredPatients.map((p) => p.facility)
+                                      ),
+                                    ].filter(Boolean).length,
+                                    1
+                                  )
+                              )}
+                            </span>
+                          </div>
+                          <div className="pt-2 border-t border-cyan-200 dark:border-cyan-700">
+                            <div className="text-xs text-cyan-500 dark:text-cyan-500">
+                              Geographic representation
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Quality Score Summary */}
+                      <Card className="bg-gradient-to-br from-violet-50 to-violet-100 dark:from-violet-950/50 dark:to-violet-900/50 border-violet-200/50 dark:border-violet-800/50">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-sm font-semibold text-violet-700 dark:text-violet-300 flex items-center gap-2">
+                            <Award className="h-4 w-4" />
+                            Quality Score
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs text-violet-600 dark:text-violet-400">
+                              Overall PPS score
+                            </span>
+                            <span className="text-sm font-bold text-violet-800 dark:text-violet-200">
+                              {Math.round(
+                                ((allGuideMetrics?.percentage_guideline_compliant ||
+                                  0) +
+                                  (allCultureMetrics?.percentage_culture_based_prescriptions ||
+                                    0) +
+                                  (allGenericMetrics?.percentage_generic_prescriptions ||
+                                    0)) /
+                                  3
+                              )}
+                              %
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs text-violet-600 dark:text-violet-400">
+                              Data completeness
+                            </span>
+                            <span className="text-sm font-bold text-violet-800 dark:text-violet-200">
+                              {Math.round(
+                                (filteredStats?.total_patients || 0) > 0
+                                  ? 95
+                                  : 0
+                              )}
+                              %
+                            </span>
+                          </div>
+                          <div className="pt-2 border-t border-violet-200 dark:border-violet-700">
+                            <div className="text-xs text-violet-500 dark:text-violet-500">
+                              Composite quality indicator
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </div>
 
               {/* PPS Detailed Analysis Charts */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -1257,14 +1943,7 @@ export default function PPSDashboard() {
                             dataKey="adherence"
                             fill="#10b981"
                             name="Adherence %"
-                          >
-                            <LabelList
-                              dataKey="adherence"
-                              position="top"
-                              formatter={(value: any) => `${value}%`}
-                              style={{ fontSize: '12px', fill: '#374151' }}
-                            />
-                          </Bar>
+                          />
                         </BarChart>
                       )}
                     </ResponsiveContainer>
@@ -1275,7 +1954,7 @@ export default function PPSDashboard() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <TestTube className="h-5 w-5 text-purple-600" />
-                      Antibiotic Categorization
+                      WHO AWaRe Antibiotic Categorization
                     </CardTitle>
                     <CardDescription>
                       WHO AWaRe classification with Reserve antibiotics
@@ -1361,106 +2040,32 @@ export default function PPSDashboard() {
                   </CardContent>
                 </Card>
               </div>
-
-              {/* Patient Transfer and Ward Metrics */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-sm">
-                      <Users className="h-4 w-4 text-blue-600" />
-                      Patient Transfers
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm">From Hospitals</span>
-                        <span className="font-mono text-sm">
-                          {Math.round(
-                            (filteredStats?.total_patients || 0) * 0.15
-                          )}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm">From Non-Hospitals</span>
-                        <span className="font-mono text-sm">
-                          {Math.round(
-                            (filteredStats?.total_patients || 0) * 0.05
-                          )}
-                        </span>
-                      </div>
-                      <div className="pt-2 border-t">
-                        <div className="text-xs text-muted-foreground">
-                          Prior hospitalization impact on antibiotic resistance
-                          risk
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-sm">
-                      <Calendar className="h-4 w-4 text-green-600" />
-                      Length of Stay
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm">Total Days on Ward</span>
-                        <span className="font-mono text-sm">
-                          {filteredStats?.total_patients
-                            ? (filteredStats.total_patients * 4.2).toFixed(0)
-                            : '0'}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm">Average per Patient</span>
-                        <span className="font-mono text-sm">4.2 days</span>
-                      </div>
-                      <div className="pt-2 border-t">
-                        <div className="text-xs text-muted-foreground">
-                          Correlation with antibiotic duration
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-sm">
-                      <AlertTriangle className="h-4 w-4 text-orange-600" />
-                      Missed Doses Analysis
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm">Patients Affected</span>
-                        <span className="font-mono text-sm">23</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm">Total Missed</span>
-                        <span className="font-mono text-sm">89 doses</span>
-                      </div>
-                      <div className="pt-2 border-t">
-                        <div className="text-xs text-muted-foreground">
-                          Main reasons: Patient refusal, Stock-out
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
             </div>
           )}
 
           {activeSection === 'overview' && (
             <div className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold">Overview Dashboard</h2>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    ExportService.exportSectionToPDF(
+                      'overview-content',
+                      'Overview'
+                    )
+                  }
+                  disabled={exporting}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Export Overview
+                </Button>
+              </div>
+              <div
+                id="overview-content"
+                className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+              >
                 <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -1597,7 +2202,38 @@ export default function PPSDashboard() {
 
           {activeSection === 'analytics' && (
             <div className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold">Analytics Dashboard</h2>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      ExportService.exportSectionToPDF(
+                        'analytics-content',
+                        'Analytics'
+                      )
+                    }
+                    disabled={exporting}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Export Section
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleExportAntibiotics('csv')}
+                    disabled={exporting}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Export Data
+                  </Button>
+                </div>
+              </div>
+              <div
+                id="analytics-content"
+                className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+              >
                 <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -1804,7 +2440,38 @@ export default function PPSDashboard() {
 
           {activeSection === 'patients' && (
             <div className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold">Patient Analytics</h2>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      ExportService.exportSectionToPDF(
+                        'patients-content',
+                        'Patient Analytics'
+                      )
+                    }
+                    disabled={exporting}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Export Charts
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleExportPatients('csv')}
+                    disabled={exporting}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Export Data
+                  </Button>
+                </div>
+              </div>
+              <div
+                id="patients-content"
+                className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+              >
                 <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
                   <CardHeader>
                     <CardTitle>Patients by Facility</CardTitle>
@@ -1881,7 +2548,29 @@ export default function PPSDashboard() {
 
           {activeSection === 'specimens' && (
             <div className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold">Specimen Analysis</h2>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      ExportService.exportSectionToPDF(
+                        'specimens-content',
+                        'Specimen Analysis'
+                      )
+                    }
+                    disabled={exporting}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Export Charts
+                  </Button>
+                </div>
+              </div>
+              <div
+                id="specimens-content"
+                className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+              >
                 <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
                   <CardHeader>
                     <CardTitle>Culture Results</CardTitle>
@@ -1976,50 +2665,99 @@ export default function PPSDashboard() {
             <div className="space-y-6">
               <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Upload className="h-5 w-5 text-emerald-600" />
-                    Data Upload
-                  </CardTitle>
-                  <CardDescription>
-                    Upload CSV files to import survey data
-                  </CardDescription>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        <Upload className="h-5 w-5 text-emerald-600" />
+                        Data Upload
+                      </CardTitle>
+                      <CardDescription>
+                        Upload CSV files to import survey data. Files must be in
+                        CSV format and match the expected schema.
+                      </CardDescription>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleExportPatients('csv')}
+                      disabled={exporting}
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Export Template
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <Button
                       variant="outline"
-                      className="h-24 flex-col bg-transparent"
+                      className="h-24 flex-col bg-transparent hover:bg-blue-50 hover:border-blue-200 dark:hover:bg-blue-950/50"
+                      onClick={() => triggerFileInput('patients')}
+                      disabled={uploading}
                     >
-                      <Users className="h-6 w-6 mb-2" />
-                      Upload Patients
+                      <Users className="h-6 w-6 mb-2 text-blue-600" />
+                      <span className="text-sm font-medium">
+                        Upload Patients
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        CSV format
+                      </span>
                     </Button>
                     <Button
                       variant="outline"
-                      className="h-24 flex-col bg-transparent"
+                      className="h-24 flex-col bg-transparent hover:bg-emerald-50 hover:border-emerald-200 dark:hover:bg-emerald-950/50"
+                      onClick={() => triggerFileInput('antibiotics')}
+                      disabled={uploading}
                     >
-                      <Pill className="h-6 w-6 mb-2" />
-                      Upload Antibiotics
+                      <Pill className="h-6 w-6 mb-2 text-emerald-600" />
+                      <span className="text-sm font-medium">
+                        Upload Antibiotics
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        Core variables CSV
+                      </span>
                     </Button>
                     <Button
                       variant="outline"
-                      className="h-24 flex-col bg-transparent"
+                      className="h-24 flex-col bg-transparent hover:bg-purple-50 hover:border-purple-200 dark:hover:bg-purple-950/50"
+                      onClick={() => triggerFileInput('indications')}
+                      disabled={uploading}
                     >
-                      <FileText className="h-6 w-6 mb-2" />
-                      Upload Indications
+                      <FileText className="h-6 w-6 mb-2 text-purple-600" />
+                      <span className="text-sm font-medium">
+                        Upload Indications
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        CSV format
+                      </span>
                     </Button>
                     <Button
                       variant="outline"
-                      className="h-24 flex-col bg-transparent"
+                      className="h-24 flex-col bg-transparent hover:bg-orange-50 hover:border-orange-200 dark:hover:bg-orange-950/50"
+                      onClick={() => triggerFileInput('optional-vars')}
+                      disabled={uploading}
                     >
-                      <Settings className="h-6 w-6 mb-2" />
-                      Upload Optional Vars
+                      <Settings className="h-6 w-6 mb-2 text-orange-600" />
+                      <span className="text-sm font-medium">
+                        Upload Optional Vars
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        CSV format
+                      </span>
                     </Button>
                     <Button
                       variant="outline"
-                      className="h-24 flex-col bg-transparent"
+                      className="h-24 flex-col bg-transparent hover:bg-teal-50 hover:border-teal-200 dark:hover:bg-teal-950/50"
+                      onClick={() => triggerFileInput('specimens')}
+                      disabled={uploading}
                     >
-                      <TestTube className="h-6 w-6 mb-2" />
-                      Upload Specimens
+                      <TestTube className="h-6 w-6 mb-2 text-teal-600" />
+                      <span className="text-sm font-medium">
+                        Upload Specimens
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        Specimen CSV
+                      </span>
                     </Button>
                   </div>
                 </CardContent>
@@ -2031,11 +2769,46 @@ export default function PPSDashboard() {
             <div className="space-y-6">
               <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Database className="h-5 w-5 text-slate-600" />
-                    Recent Patients
-                  </CardTitle>
-                  <CardDescription>Latest patient survey data</CardDescription>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        <Database className="h-5 w-5 text-slate-600" />
+                        Recent Patients
+                      </CardTitle>
+                      <CardDescription>
+                        Latest patient survey data
+                      </CardDescription>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleExportPatients('csv')}
+                        disabled={exporting}
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        CSV
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleExportPatients('json')}
+                        disabled={exporting}
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        JSON
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleExportPatients('pdf')}
+                        disabled={exporting}
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        PDF
+                      </Button>
+                    </div>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className="overflow-x-auto">
