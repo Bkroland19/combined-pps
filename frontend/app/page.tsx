@@ -35,6 +35,7 @@ import {
 	Area,
 	RadialBarChart,
 	RadialBar,
+	LabelList,
 } from "recharts";
 import {
 	Activity,
@@ -386,8 +387,6 @@ export default function PPSDashboard() {
 		fetchData();
 	}, []);
 
-	console.log(allBasicMetrics, "basic metricssssssss");
-
 	// Close export menu when clicking outside
 	useEffect(() => {
 		const handleClickOutside = (event: MouseEvent) => {
@@ -438,7 +437,7 @@ export default function PPSDashboard() {
 	// Export functions
 	const handleExportDashboard = async () => {
 		setExporting(true);
-		setError(null); // Clear any previous errors
+		setError(null);
 
 		try {
 			// Wait a bit to ensure all content is rendered
@@ -451,7 +450,6 @@ export default function PPSDashboard() {
 				orientation: "landscape",
 			});
 
-			// Clear any previous errors on success
 			setError(null);
 		} catch (error) {
 			console.error("Export failed:", error);
@@ -515,8 +513,6 @@ export default function PPSDashboard() {
 	const handleExportAntibiotics = async (format: "csv" | "json" = "csv") => {
 		setExporting(true);
 		try {
-			// Get antibiotic data - we'll need to fetch this from the API
-			// For now, we'll export the stats we have
 			await ExportService.exportAntibioticData(
 				[],
 				antibioticStats,
@@ -1277,28 +1273,6 @@ export default function PPSDashboard() {
 					)}
 
 					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-						<Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/50 border-blue-200/50 dark:border-blue-800/50">
-							<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-								<CardTitle className="text-sm font-medium text-blue-700 dark:text-blue-300">
-									Total Patients
-								</CardTitle>
-								<div className="p-2 bg-blue-500/10 rounded-lg">
-									<Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-								</div>
-							</CardHeader>
-							<CardContent>
-								<div className="text-3xl font-bold text-blue-900 dark:text-blue-100">
-									{loading
-										? "..."
-										: filteredStats?.total_patients?.toLocaleString() ||
-										  "0"}
-								</div>
-								<p className="text-xs text-blue-600 dark:text-blue-400">
-									Survey participants
-								</p>
-							</CardContent>
-						</Card>
-
 						<Card className="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/50 dark:to-emerald-900/50 border-emerald-200/50 dark:border-emerald-800/50">
 							<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
 								<CardTitle className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
@@ -1352,60 +1326,6 @@ export default function PPSDashboard() {
 
 					{activeSection === "visuals" && (
 						<div className="space-y-6">
-							{/* Reporting Period Header */}
-							<Card className="bg-gradient-to-r from-blue-50 to-emerald-50 dark:from-blue-950/50 dark:to-emerald-950/50 border-blue-200/50 dark:border-blue-800/50">
-								<CardHeader>
-									<CardTitle className="flex items-center gap-2 text-lg">
-										<Calendar className="h-6 w-6 text-blue-600" />
-										Point Prevalence Survey Report
-									</CardTitle>
-									<div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
-										<div>
-											<span className="font-medium text-slate-600 dark:text-slate-400">
-												Reporting Period:
-											</span>
-											<div className="text-slate-900 dark:text-slate-100">
-												{new Date().toLocaleDateString(
-													"en-US",
-													{
-														year: "numeric",
-														month: "long",
-													}
-												)}
-											</div>
-										</div>
-										<div>
-											<span className="font-medium text-slate-600 dark:text-slate-400">
-												Survey Type:
-											</span>
-											<div className="text-slate-900 dark:text-slate-100">
-												PPS
-											</div>
-										</div>
-										<div>
-											<span className="font-medium text-slate-600 dark:text-slate-400">
-												Facilities:
-											</span>
-											<div className="text-slate-900 dark:text-slate-100">
-												{patientStats
-													?.by_facility
-													?.length ||
-													0}{" "}
-												Total
-											</div>
-										</div>
-										<div>
-											<span className="font-medium text-slate-600 dark:text-slate-400">
-												Status:
-											</span>
-											<div className="text-emerald-600 dark:text-emerald-400 font-medium">
-												Active
-											</div>
-										</div>
-									</div>
-								</CardHeader>
-							</Card>
-
 							{/* PPS Quality Indicators - Primary Metrics */}
 							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 								{/* PPS Indicator 5.1 - Average antibiotics per patient */}
@@ -1577,194 +1497,9 @@ export default function PPSDashboard() {
 							</div>
 
 							{/* Main Dashboard Visualizations */}
-							<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-								{/* Central Donut Chart - Main Visual */}
-								<Card className="lg:col-span-2 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-									<CardHeader>
-										<CardTitle className="flex items-center gap-2">
-											<Activity className="h-6 w-6 text-emerald-600" />
-											Point Prevalence Survey
-											Overview
-										</CardTitle>
-										<CardDescription>
-											Comprehensive
-											antimicrobial usage
-											surveillance data
-										</CardDescription>
-									</CardHeader>
-									<CardContent>
-										<div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-											{/* Patients Donut Chart */}
-											<div className="text-center">
-												<h4 className="text-lg font-semibold mb-4 text-slate-700 dark:text-slate-300">
-													Patient
-													Distribution
-												</h4>
-												<ResponsiveContainer
-													width="100%"
-													height={200}
-												>
-													{loading ? (
-														<div className="flex items-center justify-center h-full">
-															<div className="text-muted-foreground">
-																Loading...
-															</div>
-														</div>
-													) : (
-														<PieChart>
-															<Pie
-																data={[
-																	{
-																		name: "On Antibiotics",
-																		value:
-																			filteredStats?.patients_on_antibiotic ||
-																			0,
-																		fill: "hsl(var(--chart-1))",
-																	},
-																	{
-																		name: "Not on Antibiotics",
-																		value:
-																			(filteredStats?.total_patients ||
-																				0) -
-																			(filteredStats?.patients_on_antibiotic ||
-																				0),
-																		fill: "hsl(var(--chart-2))",
-																	},
-																]}
-																cx="50%"
-																cy="50%"
-																innerRadius={
-																	40
-																}
-																outerRadius={
-																	80
-																}
-																paddingAngle={
-																	5
-																}
-																dataKey="value"
-															>
-																{[
-																	1,
-																	2,
-																].map(
-																	(
-																		entry,
-																		index
-																	) => (
-																		<Cell
-																			key={`cell-${index}`}
-																		/>
-																	)
-																)}
-															</Pie>
-															<Tooltip
-																formatter={(
-																	value
-																) => [
-																	`${value}`,
-																	"Patients",
-																]}
-															/>
-														</PieChart>
-													)}
-												</ResponsiveContainer>
-												<div className="mt-2">
-													<div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-														{filteredStats?.total_patients?.toLocaleString() ||
-															"0"}
-													</div>
-													<div className="text-sm text-muted-foreground">
-														Total
-														Patients
-													</div>
-												</div>
-											</div>
-
-											{/* Specimens Donut Chart */}
-											<div className="text-center">
-												<h4 className="text-lg font-semibold mb-4 text-slate-700 dark:text-slate-300">
-													Culture Results
-												</h4>
-												<ResponsiveContainer
-													width="100%"
-													height={200}
-												>
-													{loading ? (
-														<div className="flex items-center justify-center h-full">
-															<div className="text-muted-foreground">
-																Loading...
-															</div>
-														</div>
-													) : (
-														<PieChart>
-															<Pie
-																data={formatChartData(
-																	specimenStats?.by_result ||
-																		[],
-																	"result",
-																	"count"
-																)}
-																cx="50%"
-																cy="50%"
-																innerRadius={
-																	40
-																}
-																outerRadius={
-																	80
-																}
-																paddingAngle={
-																	5
-																}
-																dataKey="value"
-															>
-																{formatChartData(
-																	specimenStats?.by_result ||
-																		[],
-																	"result",
-																	"count"
-																).map(
-																	(
-																		entry,
-																		index
-																	) => (
-																		<Cell
-																			key={`cell-${index}`}
-																			fill={
-																				entry.color
-																			}
-																		/>
-																	)
-																)}
-															</Pie>
-															<Tooltip
-																formatter={(
-																	value
-																) => [
-																	`${value}`,
-																	"Specimens",
-																]}
-															/>
-														</PieChart>
-													)}
-												</ResponsiveContainer>
-												<div className="mt-2">
-													<div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-														{specimenStats?.total_specimens?.toLocaleString() ||
-															"0"}
-													</div>
-													<div className="text-sm text-muted-foreground">
-														Total
-														Specimens
-													</div>
-												</div>
-											</div>
-										</div>
-									</CardContent>
-								</Card>
-
+							<div className="">
 								{/* PPS Metrics Sidebar */}
-								<Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+								<Card className="bg-white/50 dark:bg-slate-900/50 w-full backdrop-blur-sm">
 									<CardHeader>
 										<CardTitle className="flex items-center gap-2">
 											<BarChart3 className="h-5 w-5 text-blue-600" />
@@ -1775,8 +1510,8 @@ export default function PPSDashboard() {
 											indicators
 										</CardDescription>
 									</CardHeader>
-									<CardContent className="space-y-4">
-										<div className="border-b pb-3">
+									<CardContent className="flex justify-evenly items-center gap-4">
+										<div className="">
 											<div className="text-sm font-medium mb-2">
 												Culture Sampling
 												Metrics
@@ -1808,7 +1543,7 @@ export default function PPSDashboard() {
 											</div>
 										</div>
 
-										<div className="border-b pb-3">
+										<div className="">
 											<div className="text-sm font-medium mb-2">
 												Missed Doses
 											</div>
@@ -1832,7 +1567,7 @@ export default function PPSDashboard() {
 											</div>
 										</div>
 
-										<div className="border-b pb-3">
+										<div className="">
 											<div className="text-sm font-medium mb-2">
 												Hospital Stay
 											</div>
@@ -1864,7 +1599,7 @@ export default function PPSDashboard() {
 											</div>
 										</div>
 
-										<div className="border-b pb-3">
+										<div className="">
 											<div className="text-sm font-medium mb-2">
 												WHO AWaRe
 												Classification
