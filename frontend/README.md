@@ -7,13 +7,20 @@ A modern, responsive dashboard for managing and visualizing Point Prevalence Sur
 -    **Real-time Dashboard**: Overview of patient statistics, antibiotic usage, and specimen data
 -    **Data Visualization**: Interactive charts and graphs using Recharts
 -    **Multi-section Navigation**:
-     -    Overview: Key metrics and trends
-     -    Analytics: Detailed statistical analysis
-     -    Patients: Patient distribution by region, facility, and ward
-     -    Antibiotics: Antibiotic class, classification, and administration routes
-     -    Specimens: Specimen types, culture results, and microorganisms
-     -    Data Upload: CSV file upload interface
-     -    Database: Recent patient data table
+     -    **Visuals**: Main PPS dashboard with key indicators and visual analytics
+     -    **Overview**: Key metrics and trends
+     -    **Analytics**: Detailed statistical analysis
+     -    **Patients**: Patient distribution by region, facility, and ward
+     -    **Antibiotics**: Antibiotic class, classification, and administration routes
+     -    **Specimens**: Specimen types, culture results, and microorganisms
+     -    **Data Upload**: CSV file upload interface
+     -    **Database**: Recent patient data table
+-    **Advanced Filtering**: Cascading filters for region, district, sub county, facility, ownership, level of care, and ward
+-    **Comprehensive Export System**:
+     -    **PDF Export**: Full dashboard, individual sections, and detailed reports
+     -    **CSV Export**: Patient data, antibiotic statistics, and filtered datasets
+     -    **JSON Export**: Complete data exports with metadata and filters
+     -    **Template Export**: CSV templates for data upload
 -    **Responsive Design**: Works on desktop, tablet, and mobile devices
 -    **Modern UI**: Clean, professional interface with dark mode support
 
@@ -178,6 +185,46 @@ CMD ["node", "server.js"]
 
 The dashboard automatically configures the API client to connect to your backend. Ensure your backend is running and accessible at the configured URL.
 
+## Export Functionality
+
+The dashboard includes a comprehensive export system with multiple formats and options:
+
+### PDF Export
+
+-    **Full Dashboard Export**: Exports the entire dashboard as a multi-page PDF
+-    **Section Export**: Export individual sections (Overview, Analytics, Patients, etc.)
+-    **Automatic Pagination**: Large content is automatically split across pages
+-    **Print-optimized Styling**: Special CSS ensures proper PDF rendering
+
+### Data Export
+
+-    **CSV Export**: Export patient data, statistics, and filtered datasets
+-    **JSON Export**: Complete data exports including metadata and applied filters
+-    **Template Export**: Download CSV templates for data upload
+
+### Export Features
+
+-    **Filtered Data Export**: Exports respect all applied filters
+-    **Loading States**: Visual feedback during export operations
+-    **Error Handling**: Graceful error handling with user feedback
+-    **Multiple Formats**: Choose between PDF, CSV, and JSON based on needs
+
+### Usage
+
+```typescript
+// Export entire dashboard
+await ExportService.exportDashboardToPDF({
+	filename: "PPS_Dashboard_Report",
+	orientation: "landscape",
+});
+
+// Export patient data
+await ExportService.exportPatientData(patients, "csv", filters);
+
+// Export specific section
+await ExportService.exportSectionToPDF("analytics-content", "Analytics");
+```
+
 ## Development
 
 ### Adding New Sections
@@ -185,6 +232,7 @@ The dashboard automatically configures the API client to connect to your backend
 1. Add new sidebar item in `sidebarItems` array
 2. Create new section component in the conditional rendering
 3. Add appropriate API calls and data visualization
+4. Add export functionality with section ID and export buttons
 
 ### Customizing Charts
 
@@ -193,6 +241,12 @@ The dashboard uses Recharts for data visualization. You can customize:
 -    Chart types (Bar, Pie, Line, Area)
 -    Color schemes (defined in CSS variables)
 -    Data formatting and labels
+
+### Adding Export to New Sections
+
+1. Add a unique `id` attribute to the section container
+2. Add export buttons with appropriate handlers
+3. Ensure proper styling for PDF export (see `styles/export.css`)
 
 ## Troubleshooting
 

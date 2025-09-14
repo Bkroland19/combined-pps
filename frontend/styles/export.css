@@ -1,0 +1,147 @@
+/* Export-specific styles for PDF generation */
+
+/* Ensure proper layout for PDF export */
+[data-dashboard-content] {
+	min-height: 100vh;
+	background: white !important;
+}
+
+/* PDF-friendly chart styling */
+@media print {
+	.recharts-wrapper {
+		background: white !important;
+	}
+
+	.recharts-surface {
+		background: white !important;
+	}
+
+	/* Hide scrollbars in PDF */
+	::-webkit-scrollbar {
+		display: none;
+	}
+
+	/* Ensure cards are visible in PDF */
+	.bg-card {
+		background: white !important;
+		border: 1px solid #e5e7eb !important;
+	}
+
+	/* Ensure text is visible */
+	.text-card-foreground,
+	.text-foreground {
+		color: #1f2937 !important;
+	}
+
+	.text-muted-foreground {
+		color: #6b7280 !important;
+	}
+
+	/* Fix gradient backgrounds for PDF */
+	.bg-gradient-to-br,
+	.bg-gradient-to-r {
+		background: white !important;
+		border: 1px solid #e5e7eb !important;
+	}
+
+	/* Ensure proper spacing */
+	.space-y-6 > * + * {
+		margin-top: 1.5rem !important;
+	}
+
+	/* Break pages appropriately */
+	.page-break {
+		page-break-before: always;
+	}
+
+	/* Prevent orphaned elements */
+	.card {
+		break-inside: avoid;
+	}
+}
+
+/* Export loading overlay */
+.export-overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: rgba(0, 0, 0, 0.5);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 9999;
+}
+
+.export-spinner {
+	background: white;
+	padding: 2rem;
+	border-radius: 0.5rem;
+	box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+	text-align: center;
+}
+
+/* Ensure charts render properly for export */
+.recharts-responsive-container {
+	background: white !important;
+}
+
+/* Fix dark mode issues in PDF export */
+.dark [data-dashboard-content] {
+	background: white !important;
+	color: #1f2937 !important;
+}
+
+.dark [data-dashboard-content] * {
+	color: inherit !important;
+	background: inherit !important;
+}
+
+/* Export button styling */
+.export-button {
+	transition: all 0.2s ease;
+}
+
+.export-button:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+/* Ensure proper table styling in PDFs */
+table {
+	border-collapse: collapse;
+	width: 100%;
+}
+
+table th,
+table td {
+	border: 1px solid #e5e7eb;
+	padding: 0.5rem;
+	text-align: left;
+}
+
+table th {
+	background-color: #f9fafb;
+	font-weight: 600;
+}
+
+/* PDF-specific layout improvements */
+.pdf-section {
+	margin-bottom: 2rem;
+	break-inside: avoid;
+}
+
+.pdf-header {
+	border-bottom: 2px solid #e5e7eb;
+	padding-bottom: 1rem;
+	margin-bottom: 2rem;
+}
+
+.pdf-footer {
+	border-top: 1px solid #e5e7eb;
+	padding-top: 1rem;
+	margin-top: 2rem;
+	font-size: 0.875rem;
+	color: #6b7280;
+}

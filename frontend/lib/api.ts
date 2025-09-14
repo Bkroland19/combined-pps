@@ -190,6 +190,78 @@ export class PPSApi {
         return response.json()
     }
 
+
+    static async getBasicMetric(): Promise<any>{
+        const response = await fetch(`${this.baseUrl}/api/v1/pps/basic-metrics`)
+        if (!response.ok) throw new Error('Failed to fetch')
+        
+        return response.json()
+    }
+
+    static async getCultureMetric(): Promise<any> {
+        const response = await fetch(`${this.baseUrl}/api/v1/pps/culture-metrics`)
+        if (!response.ok) throw new Error('Failed to fetch')
+        
+        return response.json()
+    }
+
+    static async getDiagnosisMetric(): Promise<any> {
+        const response = await fetch(`${this.baseUrl}/api/v1/pps/diagnosis-metrics`)
+        if (!response.ok) throw new Error('Failed to fetch')
+        
+        return response.json()
+    }
+
+    static async getGenericMetric(): Promise<any> {
+        const response = await fetch(`${this.baseUrl}/api/v1/pps/generic-metrics`)
+        if (!response.ok) throw new Error('Failed to fetch')
+
+        return response.json()
+    }
+    static async getGuidelineMetric(): Promise<any> {
+        const response = await fetch(`${this.baseUrl}/api/v1/pps/guideline-metrics`)
+        if (!response.ok) throw new Error('Failed to fetch')
+
+        return response.json()
+    }
+
+    static async getIndicators(): Promise<any> {
+        const response = await fetch(`${this.baseUrl}/api/v1/pps/indicators`)
+        if (!response.ok) throw new Error('Failed to fetch')
+
+        return response.json()
+    }
+
+
+    static async getInjectableMetrics(): Promise<any> {
+        const response = await fetch(`${this.baseUrl}/api/v1/pps/injectable-metrics`)
+        if (!response.ok) throw new Error('Failed to fetch')
+
+        return response.json()
+    }
+
+
+    static async getMissedDose(): Promise<any> {
+        const response = await fetch(`${this.baseUrl}/api/v1/pps/missed-dose-metrics`)
+        if (!response.ok) throw new Error('Failed to fetch')
+
+        return response.json()
+    }
+
+    static async getOralSwitch(): Promise<any> {
+        const response = await fetch(`${this.baseUrl}/api/v1/pps/oral-switch-metrics`)
+        if (!response.ok) throw new Error('Failed to fetch')
+
+        return response.json()
+    }
+
+    static async getPrescriberMetrics(): Promise<any> {
+        const response = await fetch(`${this.baseUrl}/api/v1/pps/prescriber-metrics`)
+        if (!response.ok) throw new Error('Failed to fetch')
+
+        return response.json()
+    }
+
     static async getPatientStats(): Promise<PatientStats> {
         const response = await fetch(`${this.baseUrl}/api/v1/patients/stats`)
         if (!response.ok) throw new Error('Failed to fetch patient stats')

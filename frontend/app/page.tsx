@@ -660,9 +660,7 @@ export default function PPSDashboard() {
                   )}
 
                   {/* Clear Filters */}
-                  {((selectedFromDate && selectedFromDate !== 'all') ||
-                    (selectedToDate && selectedToDate !== 'all') ||
-                    (selectedRegion && selectedRegion !== 'all') ||
+                  {((selectedRegion && selectedRegion !== 'all') ||
                     (selectedDistrict && selectedDistrict !== 'all') ||
                     (selectedSubCounty && selectedSubCounty !== 'all') ||
                     (selectedFacility && selectedFacility !== 'all') ||
@@ -673,8 +671,6 @@ export default function PPSDashboard() {
                       variant="outline"
                       size="sm"
                       onClick={() => {
-                        setSelectedFromDate('all');
-                        setSelectedToDate('all');
                         setSelectedRegion('all');
                         setSelectedDistrict('all');
                         setSelectedSubCounty('all');
