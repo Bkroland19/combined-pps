@@ -434,6 +434,22 @@ export default function PPSDashboard() {
   }, [exportMenuOpen]);
 
   // Reset dependent dropdowns when parent changes
+  const handleFromDateChange = (date: string) => {
+    setSelectedFromDate(date);
+    setSelectedRegion('all');
+    setSelectedDistrict('all');
+    setSelectedSubCounty('all');
+    setSelectedFacility('all');
+  };
+
+  const handleToDateChange = (date: string) => {
+    setSelectedToDate(date);
+    setSelectedRegion('all');
+    setSelectedDistrict('all');
+    setSelectedSubCounty('all');
+    setSelectedFacility('all');
+  };
+
   const handleRegionChange = (region: string) => {
     setSelectedRegion(region);
     setSelectedDistrict('all');
@@ -762,7 +778,42 @@ export default function PPSDashboard() {
 
               <div className="flex w-full items-center gap-3 flex-wrap">
                 {/* Cascading Filter Dropdowns */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  {/* From Date Picker */}
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                      From:
+                    </label>
+                    <input
+                      type="date"
+                      value={selectedFromDate === 'all' ? '' : selectedFromDate}
+                      onChange={(e) =>
+                        handleFromDateChange(e.target.value || 'all')
+                      }
+                      className="px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  {/* To Date Picker */}
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                      To:
+                    </label>
+                    <input
+                      type="date"
+                      value={selectedToDate === 'all' ? '' : selectedToDate}
+                      onChange={(e) =>
+                        handleToDateChange(e.target.value || 'all')
+                      }
+                      min={
+                        selectedFromDate === 'all'
+                          ? undefined
+                          : selectedFromDate
+                      }
+                      className="px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    />
+                  </div>
+
                   {/* Region Dropdown */}
                   <Select
                     value={selectedRegion}
@@ -898,7 +949,9 @@ export default function PPSDashboard() {
                   )}
 
                   {/* Clear Filters */}
-                  {((selectedRegion && selectedRegion !== 'all') ||
+                  {((selectedFromDate && selectedFromDate !== 'all') ||
+                    (selectedToDate && selectedToDate !== 'all') ||
+                    (selectedRegion && selectedRegion !== 'all') ||
                     (selectedDistrict && selectedDistrict !== 'all') ||
                     (selectedSubCounty && selectedSubCounty !== 'all') ||
                     (selectedFacility && selectedFacility !== 'all') ||
@@ -909,6 +962,8 @@ export default function PPSDashboard() {
                       variant="outline"
                       size="sm"
                       onClick={() => {
+                        setSelectedFromDate('all');
+                        setSelectedToDate('all');
                         setSelectedRegion('all');
                         setSelectedDistrict('all');
                         setSelectedSubCounty('all');
@@ -1088,7 +1143,9 @@ export default function PPSDashboard() {
           )}
 
           {/* Filter Status */}
-          {((selectedRegion && selectedRegion !== 'all') ||
+          {((selectedFromDate && selectedFromDate !== 'all') ||
+            (selectedToDate && selectedToDate !== 'all') ||
+            (selectedRegion && selectedRegion !== 'all') ||
             (selectedDistrict && selectedDistrict !== 'all') ||
             (selectedSubCounty && selectedSubCounty !== 'all') ||
             (selectedFacility && selectedFacility !== 'all') ||
@@ -1103,6 +1160,22 @@ export default function PPSDashboard() {
                     Active filters:
                   </span>
                   <div className="flex gap-1">
+                    {selectedFromDate && selectedFromDate !== 'all' && (
+                      <Badge
+                        variant="secondary"
+                        className="bg-indigo-100 text-indigo-700"
+                      >
+                        From: {new Date(selectedFromDate).toLocaleDateString()}
+                      </Badge>
+                    )}
+                    {selectedToDate && selectedToDate !== 'all' && (
+                      <Badge
+                        variant="secondary"
+                        className="bg-purple-100 text-purple-700"
+                      >
+                        To: {new Date(selectedToDate).toLocaleDateString()}
+                      </Badge>
+                    )}
                     {selectedRegion && selectedRegion !== 'all' && (
                       <Badge
                         variant="secondary"
@@ -1165,6 +1238,8 @@ export default function PPSDashboard() {
                   variant="ghost"
                   size="sm"
                   onClick={() => {
+                    setSelectedFromDate('all');
+                    setSelectedToDate('all');
                     setSelectedRegion('all');
                     setSelectedDistrict('all');
                     setSelectedSubCounty('all');
