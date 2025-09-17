@@ -1176,6 +1176,7 @@ export default function PPSDashboard() {
                         To: {new Date(selectedToDate).toLocaleDateString()}
                       </Badge>
                     )}
+
                     {selectedRegion && selectedRegion !== 'all' && (
                       <Badge
                         variant="secondary"
