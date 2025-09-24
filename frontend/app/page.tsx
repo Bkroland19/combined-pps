@@ -72,6 +72,7 @@ import {
 	AntibioticStats,
 	SpecimenStats,
 	Patient,
+	AwareStats,
 } from "@/lib/api";
 import {
 	ExportService,
@@ -121,6 +122,7 @@ export default function PPSDashboard() {
 	const [allPatientDaysMetrics, setAllPatientDaysMetrics] = useState<any>(
 		[]
 	);
+	const [awareStats, setAwareStats] = useState<AwareStats | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [exporting, setExporting] = useState(false);
@@ -380,6 +382,7 @@ export default function PPSDashboard() {
 					allPrescriberMetrics,
 					allGuideMetrics,
 					allPatientDaysMetrics,
+					awareStatsRes,
 				] = await Promise.all([
 					PPSApi.getPatientStats(),
 					PPSApi.getAntibioticStats(),
@@ -396,6 +399,7 @@ export default function PPSDashboard() {
 					PPSApi.getPrescriberMetrics(),
 					PPSApi.getGuidelineMetric(),
 					PPSApi.getPatientDaysMetric(),
+					PPSApi.getAwareCategorization(),
 				]);
 
 				setPatientStats(patientStatsRes);
@@ -414,6 +418,7 @@ export default function PPSDashboard() {
 				setAllPrescriberMetrics(allPrescriberMetrics);
 				setGuideMetrics(allGuideMetrics);
 				setAllPatientDaysMetrics(allPatientDaysMetrics);
+				setAwareStats(awareStatsRes);
 
 				// Debug log to see what data we're getting
 				console.log("Patient Days Metrics:", allPatientDaysMetrics);
@@ -2223,52 +2228,141 @@ export default function PPSDashboard() {
 													</CardTitle>
 												</CardHeader>
 												<CardContent className="space-y-2">
-													<div className="space-y-2">
-														<div className="flex justify-between items-center">
-															<span className="text-xs text-green-600">
-																Access
-															</span>
-															<span className="text-xs font-bold text-green-700">
-																72%
-															</span>
+													{loading ? (
+														<div className="flex items-center justify-center h-20">
+															<div className="text-muted-foreground text-sm">
+																Loading...
+															</div>
 														</div>
-														<Progress
-															value={
-																72
-															}
-															className="h-1.5"
-														/>
+													) : (
+														<div className="space-y-2">
+															{/* Access */}
+															<div className="flex justify-between items-center">
+																<span className="text-xs text-green-600 dark:text-green-400">
+																	Access
+																</span>
+																<span className="text-xs font-bold text-green-700 dark:text-green-300">
+																	{awareStats?.access?.percentage?.toFixed(
+																		1
+																	) ||
+																		0}
 
-														<div className="flex justify-between items-center">
-															<span className="text-xs text-yellow-600">
-																Watch
-															</span>
-															<span className="text-xs font-bold text-yellow-700">
-																22%
-															</span>
-														</div>
-														<Progress
-															value={
-																22
-															}
-															className="h-1.5"
-														/>
+																	%
+																</span>
+															</div>
+															<Progress
+																value={
+																	awareStats
+																		?.access
+																		?.percentage ||
+																	0
+																}
+																className="h-1.5"
+															/>
+															<div className="text-xs text-green-500 dark:text-green-500">
+																{awareStats?.access?.count?.toLocaleString() ||
+																	0}{" "}
+																antibiotics
+															</div>
 
-														<div className="flex justify-between items-center">
-															<span className="text-xs text-red-600">
-																Reserve
-															</span>
-															<span className="text-xs font-bold text-red-700">
-																6%
-															</span>
+															{/* Watch */}
+															<div className="flex justify-between items-center">
+																<span className="text-xs text-yellow-600 dark:text-yellow-400">
+																	Watch
+																</span>
+																<span className="text-xs font-bold text-yellow-700 dark:text-yellow-300">
+																	{awareStats?.watch?.percentage?.toFixed(
+																		1
+																	) ||
+																		0}
+
+																	%
+																</span>
+															</div>
+															<Progress
+																value={
+																	awareStats
+																		?.watch
+																		?.percentage ||
+																	0
+																}
+																className="h-1.5"
+															/>
+															<div className="text-xs text-yellow-500 dark:text-yellow-500">
+																{awareStats?.watch?.count?.toLocaleString() ||
+																	0}{" "}
+																antibiotics
+															</div>
+
+															{/* Reserve */}
+															<div className="flex justify-between items-center">
+																<span className="text-xs text-red-600 dark:text-red-400">
+																	Reserve
+																</span>
+																<span className="text-xs font-bold text-red-700 dark:text-red-300">
+																	{awareStats?.reserve?.percentage?.toFixed(
+																		1
+																	) ||
+																		0}
+
+																	%
+																</span>
+															</div>
+															<Progress
+																value={
+																	awareStats
+																		?.reserve
+																		?.percentage ||
+																	0
+																}
+																className="h-1.5"
+															/>
+															<div className="text-xs text-red-500 dark:text-red-500">
+																{awareStats?.reserve?.count?.toLocaleString() ||
+																	0}{" "}
+																antibiotics
+															</div>
+
+															{/* Unclassified */}
+															<div className="flex justify-between items-center">
+																<span className="text-xs text-gray-600 dark:text-gray-400">
+																	Unclassified
+																</span>
+																<span className="text-xs font-bold text-gray-700 dark:text-gray-300">
+																	{awareStats?.unclassified?.percentage?.toFixed(
+																		1
+																	) ||
+																		0}
+
+																	%
+																</span>
+															</div>
+															<Progress
+																value={
+																	awareStats
+																		?.unclassified
+																		?.percentage ||
+																	0
+																}
+																className="h-1.5"
+															/>
+															<div className="text-xs text-gray-500 dark:text-gray-500">
+																{awareStats?.unclassified?.count?.toLocaleString() ||
+																	0}{" "}
+																antibiotics
+															</div>
+
+															{/* Total */}
+															<div className="pt-2 border-t border-amber-200 dark:border-amber-700">
+																<div className="text-xs text-amber-600 dark:text-amber-400">
+																	Total:{" "}
+																	{awareStats?.total_antibiotics?.toLocaleString() ||
+																		0}{" "}
+																	antibiotics
+																</div>
+															</div>
 														</div>
-														<Progress
-															value={
-																6
-															}
-															className="h-1.5"
-														/>
-													</div>
+													)}
 												</CardContent>
 											</Card>
 										</div>
@@ -2575,14 +2669,25 @@ export default function PPSDashboard() {
 													<CardContent className="p-4">
 														<div className="text-center">
 															<div className="text-2xl font-bold text-green-700 dark:text-green-300">
-																72%
+																{awareStats?.access?.percentage?.toFixed(
+																	1
+																) ||
+																	0}
+
+																%
 															</div>
 															<div className="text-sm font-medium text-green-600 dark:text-green-400 mt-1">
 																Access
 															</div>
 															<div className="text-xs text-green-500 dark:text-green-500 mt-1">
-																First
-																choice
+																{awareStats
+																	?.access
+																	?.description ||
+																	"First choice antibiotics"}
+															</div>
+															<div className="text-xs text-green-500 dark:text-green-500 mt-1">
+																{awareStats?.access?.count?.toLocaleString() ||
+																	0}{" "}
 																antibiotics
 															</div>
 														</div>
@@ -2594,14 +2699,25 @@ export default function PPSDashboard() {
 													<CardContent className="p-4">
 														<div className="text-center">
 															<div className="text-2xl font-bold text-amber-700 dark:text-amber-300">
-																22%
+																{awareStats?.watch?.percentage?.toFixed(
+																	1
+																) ||
+																	0}
+
+																%
 															</div>
 															<div className="text-sm font-medium text-amber-600 dark:text-amber-400 mt-1">
 																Watch
 															</div>
 															<div className="text-xs text-amber-500 dark:text-amber-500 mt-1">
-																Second
-																choice
+																{awareStats
+																	?.watch
+																	?.description ||
+																	"Second choice antibiotics"}
+															</div>
+															<div className="text-xs text-amber-500 dark:text-amber-500 mt-1">
+																{awareStats?.watch?.count?.toLocaleString() ||
+																	0}{" "}
 																antibiotics
 															</div>
 														</div>
@@ -2613,14 +2729,25 @@ export default function PPSDashboard() {
 													<CardContent className="p-4">
 														<div className="text-center">
 															<div className="text-2xl font-bold text-red-700 dark:text-red-300">
-																6%
+																{awareStats?.reserve?.percentage?.toFixed(
+																	1
+																) ||
+																	0}
+
+																%
 															</div>
 															<div className="text-sm font-medium text-red-600 dark:text-red-400 mt-1">
 																Reserve
 															</div>
 															<div className="text-xs text-red-500 dark:text-red-500 mt-1">
-																Last
-																resort
+																{awareStats
+																	?.reserve
+																	?.description ||
+																	"Last resort antibiotics"}
+															</div>
+															<div className="text-xs text-red-500 dark:text-red-500 mt-1">
+																{awareStats?.reserve?.count?.toLocaleString() ||
+																	0}{" "}
 																antibiotics
 															</div>
 														</div>
@@ -2632,14 +2759,26 @@ export default function PPSDashboard() {
 													<CardContent className="p-4">
 														<div className="text-center">
 															<div className="text-2xl font-bold text-gray-700 dark:text-gray-300">
-																0%
+																{awareStats?.unclassified?.percentage?.toFixed(
+																	1
+																) ||
+																	0}
+
+																%
 															</div>
 															<div className="text-sm font-medium text-gray-600 dark:text-gray-400 mt-1">
 																Unclassified
 															</div>
 															<div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-																Not
-																categorized
+																{awareStats
+																	?.unclassified
+																	?.description ||
+																	"Not categorized"}
+															</div>
+															<div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+																{awareStats?.unclassified?.count?.toLocaleString() ||
+																	0}{" "}
+																antibiotics
 															</div>
 														</div>
 													</CardContent>

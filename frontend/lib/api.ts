@@ -151,6 +151,30 @@ export interface SpecimenStats {
     by_resistant_phenotype: Array<{ resistant_phenotype: string; count: number }>
 }
 
+export interface AwareStats {
+    access: {
+        count: number
+        description: string
+        percentage: number
+    }
+    reserve: {
+        count: number
+        description: string
+        percentage: number
+    }
+    total_antibiotics: number
+    unclassified: {
+        count: number
+        description: string
+        percentage: number
+    }
+    watch: {
+        count: number
+        description: string
+        percentage: number
+    }
+}
+
 // API Functions
 export class PPSApi {
     private static baseUrl = API_BASE_URL
@@ -191,31 +215,31 @@ export class PPSApi {
     }
 
 
-    static async getBasicMetric(): Promise<any>{
+    static async getBasicMetric(): Promise<any> {
         const response = await fetch(`${this.baseUrl}/api/v1/pps/basic-metrics`)
         if (!response.ok) throw new Error('Failed to fetch')
-        
+
         return response.json()
     }
 
     static async getCultureMetric(): Promise<any> {
         const response = await fetch(`${this.baseUrl}/api/v1/pps/culture-metrics`)
         if (!response.ok) throw new Error('Failed to fetch')
-        
+
         return response.json()
     }
 
     static async getPatientDaysMetric(): Promise<any> {
         const response = await fetch(`${this.baseUrl}/api/v1/pps/long-stay-patients`)
         if (!response.ok) throw new Error('Failed to fetch')
-        
+
         return response.json()
     }
 
     static async getDiagnosisMetric(): Promise<any> {
         const response = await fetch(`${this.baseUrl}/api/v1/pps/diagnosis-metrics`)
         if (!response.ok) throw new Error('Failed to fetch')
-        
+
         return response.json()
     }
 
@@ -328,6 +352,12 @@ export class PPSApi {
     static async getSpecimenStats(): Promise<SpecimenStats> {
         const response = await fetch(`${this.baseUrl}/api/v1/specimens/stats`)
         if (!response.ok) throw new Error('Failed to fetch specimen stats')
+        return response.json()
+    }
+
+    static async getAwareCategorization(): Promise<AwareStats> {
+        const response = await fetch(`${this.baseUrl}/api/v1/pps/aware-categorization`)
+        if (!response.ok) throw new Error('Failed to fetch AWaRe categorization')
         return response.json()
     }
 
