@@ -1,5 +1,5 @@
 // API configuration for Point Prevalence Survey backend
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://csf.health.go.ug'
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
 
 // Types matching backend models
 export interface Patient {
