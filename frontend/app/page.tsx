@@ -112,6 +112,8 @@ export default function PPSDashboard() {
 	const [allBasicMetrics, setAllBasicMetrics] = useState<any>([]);
 	const [allCultureMetrics, setAllCultureMetrics] = useState<any>([]);
 	const [allDiagnosisMetrics, setAllDiagnosisMetrics] = useState<any>([]);
+	const [appropriateDiagnosisData, setAppropriateDiagnosisData] =
+		useState<any>(null);
 	const [allGenericMetrics, setAllGenericMetrics] = useState<any>([]);
 	const [allIndicators, setAllIndicators] = useState<any>([]);
 	const [allInjectableMetrics, setAllInjectableMetrics] = useState<any>([]);
@@ -374,6 +376,7 @@ export default function PPSDashboard() {
 					allBasicMetrics,
 					allCultureMetrics,
 					allDiagnosisMetrics,
+					appropriateDiagnosisRes,
 					allGenericMetrics,
 					allIndicators,
 					allInjectableMetrics,
@@ -386,20 +389,318 @@ export default function PPSDashboard() {
 				] = await Promise.all([
 					PPSApi.getPatientStats(),
 					PPSApi.getAntibioticStats(),
-					PPSApi.getSpecimenStats(),
+					PPSApi.getSpecimenStats({
+						start_date:
+							selectedFromDate !== "all"
+								? selectedFromDate
+								: undefined,
+						end_date:
+							selectedToDate !== "all"
+								? selectedToDate
+								: undefined,
+						region:
+							selectedRegion !== "all"
+								? selectedRegion
+								: undefined,
+						district:
+							selectedDistrict !== "all"
+								? selectedDistrict
+								: undefined,
+						subcounty:
+							selectedSubCounty !== "all"
+								? selectedSubCounty
+								: undefined,
+						facility:
+							selectedFacility !== "all"
+								? selectedFacility
+								: undefined,
+						level:
+							selectedLevelOfCare !== "all"
+								? selectedLevelOfCare
+								: undefined,
+						ownership:
+							selectedOwnership !== "all"
+								? selectedOwnership
+								: undefined,
+					}),
 					PPSApi.getPatients({ limit: 999999 }),
-					PPSApi.getBasicMetric(),
-					PPSApi.getCultureMetric(),
+					PPSApi.getBasicMetric({
+						start_date:
+							selectedFromDate !== "all"
+								? selectedFromDate
+								: undefined,
+						end_date:
+							selectedToDate !== "all"
+								? selectedToDate
+								: undefined,
+						region:
+							selectedRegion !== "all"
+								? selectedRegion
+								: undefined,
+						district:
+							selectedDistrict !== "all"
+								? selectedDistrict
+								: undefined,
+						subcounty:
+							selectedSubCounty !== "all"
+								? selectedSubCounty
+								: undefined,
+						facility:
+							selectedFacility !== "all"
+								? selectedFacility
+								: undefined,
+						level:
+							selectedLevelOfCare !== "all"
+								? selectedLevelOfCare
+								: undefined,
+						ownership:
+							selectedOwnership !== "all"
+								? selectedOwnership
+								: undefined,
+					}),
+					PPSApi.getCultureMetric({
+						start_date:
+							selectedFromDate !== "all"
+								? selectedFromDate
+								: undefined,
+						end_date:
+							selectedToDate !== "all"
+								? selectedToDate
+								: undefined,
+						region:
+							selectedRegion !== "all"
+								? selectedRegion
+								: undefined,
+						district:
+							selectedDistrict !== "all"
+								? selectedDistrict
+								: undefined,
+						subcounty:
+							selectedSubCounty !== "all"
+								? selectedSubCounty
+								: undefined,
+						facility:
+							selectedFacility !== "all"
+								? selectedFacility
+								: undefined,
+						level:
+							selectedLevelOfCare !== "all"
+								? selectedLevelOfCare
+								: undefined,
+						ownership:
+							selectedOwnership !== "all"
+								? selectedOwnership
+								: undefined,
+					}),
 					PPSApi.getDiagnosisMetric(),
-					PPSApi.getGenericMetric(),
-					PPSApi.getIndicators(),
+					PPSApi.getAppropriateDiagnosis({
+						start_date:
+							selectedFromDate !== "all"
+								? selectedFromDate
+								: undefined,
+						end_date:
+							selectedToDate !== "all"
+								? selectedToDate
+								: undefined,
+						region:
+							selectedRegion !== "all"
+								? selectedRegion
+								: undefined,
+						district:
+							selectedDistrict !== "all"
+								? selectedDistrict
+								: undefined,
+						subcounty:
+							selectedSubCounty !== "all"
+								? selectedSubCounty
+								: undefined,
+						facility:
+							selectedFacility !== "all"
+								? selectedFacility
+								: undefined,
+						level:
+							selectedLevelOfCare !== "all"
+								? selectedLevelOfCare
+								: undefined,
+						ownership:
+							selectedOwnership !== "all"
+								? selectedOwnership
+								: undefined,
+					}),
+					PPSApi.getGenericMetric({
+						start_date:
+							selectedFromDate !== "all"
+								? selectedFromDate
+								: undefined,
+						end_date:
+							selectedToDate !== "all"
+								? selectedToDate
+								: undefined,
+						region:
+							selectedRegion !== "all"
+								? selectedRegion
+								: undefined,
+						district:
+							selectedDistrict !== "all"
+								? selectedDistrict
+								: undefined,
+						subcounty:
+							selectedSubCounty !== "all"
+								? selectedSubCounty
+								: undefined,
+						facility:
+							selectedFacility !== "all"
+								? selectedFacility
+								: undefined,
+						level:
+							selectedLevelOfCare !== "all"
+								? selectedLevelOfCare
+								: undefined,
+						ownership:
+							selectedOwnership !== "all"
+								? selectedOwnership
+								: undefined,
+					}),
+					PPSApi.getIndicators({
+						start_date:
+							selectedFromDate !== "all"
+								? selectedFromDate
+								: undefined,
+						end_date:
+							selectedToDate !== "all"
+								? selectedToDate
+								: undefined,
+						region:
+							selectedRegion !== "all"
+								? selectedRegion
+								: undefined,
+						district:
+							selectedDistrict !== "all"
+								? selectedDistrict
+								: undefined,
+						subcounty:
+							selectedSubCounty !== "all"
+								? selectedSubCounty
+								: undefined,
+						facility:
+							selectedFacility !== "all"
+								? selectedFacility
+								: undefined,
+						level:
+							selectedLevelOfCare !== "all"
+								? selectedLevelOfCare
+								: undefined,
+						ownership:
+							selectedOwnership !== "all"
+								? selectedOwnership
+								: undefined,
+					}),
 					PPSApi.getInjectableMetrics(),
 					PPSApi.getMissedDose(),
 					PPSApi.getOralSwitch(),
 					PPSApi.getPrescriberMetrics(),
-					PPSApi.getGuidelineMetric(),
-					PPSApi.getPatientDaysMetric(),
-					PPSApi.getAwareCategorization(),
+					PPSApi.getGuidelineMetric({
+						start_date:
+							selectedFromDate !== "all"
+								? selectedFromDate
+								: undefined,
+						end_date:
+							selectedToDate !== "all"
+								? selectedToDate
+								: undefined,
+						region:
+							selectedRegion !== "all"
+								? selectedRegion
+								: undefined,
+						district:
+							selectedDistrict !== "all"
+								? selectedDistrict
+								: undefined,
+						subcounty:
+							selectedSubCounty !== "all"
+								? selectedSubCounty
+								: undefined,
+						facility:
+							selectedFacility !== "all"
+								? selectedFacility
+								: undefined,
+						level:
+							selectedLevelOfCare !== "all"
+								? selectedLevelOfCare
+								: undefined,
+						ownership:
+							selectedOwnership !== "all"
+								? selectedOwnership
+								: undefined,
+					}),
+					PPSApi.getPatientDaysMetric({
+						start_date:
+							selectedFromDate !== "all"
+								? selectedFromDate
+								: undefined,
+						end_date:
+							selectedToDate !== "all"
+								? selectedToDate
+								: undefined,
+						region:
+							selectedRegion !== "all"
+								? selectedRegion
+								: undefined,
+						district:
+							selectedDistrict !== "all"
+								? selectedDistrict
+								: undefined,
+						subcounty:
+							selectedSubCounty !== "all"
+								? selectedSubCounty
+								: undefined,
+						facility:
+							selectedFacility !== "all"
+								? selectedFacility
+								: undefined,
+						level:
+							selectedLevelOfCare !== "all"
+								? selectedLevelOfCare
+								: undefined,
+						ownership:
+							selectedOwnership !== "all"
+								? selectedOwnership
+								: undefined,
+					}),
+					PPSApi.getAwareCategorization({
+						start_date:
+							selectedFromDate !== "all"
+								? selectedFromDate
+								: undefined,
+						end_date:
+							selectedToDate !== "all"
+								? selectedToDate
+								: undefined,
+						region:
+							selectedRegion !== "all"
+								? selectedRegion
+								: undefined,
+						district:
+							selectedDistrict !== "all"
+								? selectedDistrict
+								: undefined,
+						subcounty:
+							selectedSubCounty !== "all"
+								? selectedSubCounty
+								: undefined,
+						facility:
+							selectedFacility !== "all"
+								? selectedFacility
+								: undefined,
+						level:
+							selectedLevelOfCare !== "all"
+								? selectedLevelOfCare
+								: undefined,
+						ownership:
+							selectedOwnership !== "all"
+								? selectedOwnership
+								: undefined,
+					}),
 				]);
 
 				setPatientStats(patientStatsRes);
@@ -410,6 +711,11 @@ export default function PPSDashboard() {
 				setAllBasicMetrics(allBasicMetrics);
 				setAllCultureMetrics(allCultureMetrics);
 				setAllDiagnosisMetrics(allDiagnosisMetrics);
+				console.log(
+					"Appropriate Diagnosis API Response:",
+					appropriateDiagnosisRes
+				);
+				setAppropriateDiagnosisData(appropriateDiagnosisRes);
 				setAllGenericMetrics(allGenericMetrics);
 				setAllIndicators(allIndicators);
 				setAllInjectableMetrics(allInjectableMetrics);
@@ -442,6 +748,611 @@ export default function PPSDashboard() {
 
 		fetchData();
 	}, []);
+
+	// Re-fetch appropriate diagnosis data when filters change
+	useEffect(() => {
+		const fetchAppropriateDiagnosis = async () => {
+			try {
+				const appropriateDiagnosisRes =
+					await PPSApi.getAppropriateDiagnosis({
+						start_date:
+							selectedFromDate !== "all"
+								? selectedFromDate
+								: undefined,
+						end_date:
+							selectedToDate !== "all"
+								? selectedToDate
+								: undefined,
+						region:
+							selectedRegion !== "all"
+								? selectedRegion
+								: undefined,
+						district:
+							selectedDistrict !== "all"
+								? selectedDistrict
+								: undefined,
+						subcounty:
+							selectedSubCounty !== "all"
+								? selectedSubCounty
+								: undefined,
+						facility:
+							selectedFacility !== "all"
+								? selectedFacility
+								: undefined,
+						level:
+							selectedLevelOfCare !== "all"
+								? selectedLevelOfCare
+								: undefined,
+						ownership:
+							selectedOwnership !== "all"
+								? selectedOwnership
+								: undefined,
+					});
+				console.log(
+					"Filtered Appropriate Diagnosis API Response:",
+					appropriateDiagnosisRes
+				);
+				setAppropriateDiagnosisData(appropriateDiagnosisRes);
+			} catch (err) {
+				console.error(
+					"Error fetching filtered appropriate diagnosis data:",
+					err
+				);
+			}
+		};
+
+		// Only fetch if we have patient data loaded (to avoid unnecessary calls)
+		if (allPatients.length > 0) {
+			fetchAppropriateDiagnosis();
+		}
+	}, [
+		selectedFromDate,
+		selectedToDate,
+		selectedRegion,
+		selectedDistrict,
+		selectedSubCounty,
+		selectedFacility,
+		selectedLevelOfCare,
+		selectedOwnership,
+		allPatients.length,
+	]);
+
+	// Re-fetch AWaRe categorization data when filters change
+	useEffect(() => {
+		const fetchAwareCategorization = async () => {
+			try {
+				const awareStatsRes = await PPSApi.getAwareCategorization({
+					start_date:
+						selectedFromDate !== "all"
+							? selectedFromDate
+							: undefined,
+					end_date:
+						selectedToDate !== "all"
+							? selectedToDate
+							: undefined,
+					region:
+						selectedRegion !== "all"
+							? selectedRegion
+							: undefined,
+					district:
+						selectedDistrict !== "all"
+							? selectedDistrict
+							: undefined,
+					subcounty:
+						selectedSubCounty !== "all"
+							? selectedSubCounty
+							: undefined,
+					facility:
+						selectedFacility !== "all"
+							? selectedFacility
+							: undefined,
+					level:
+						selectedLevelOfCare !== "all"
+							? selectedLevelOfCare
+							: undefined,
+					ownership:
+						selectedOwnership !== "all"
+							? selectedOwnership
+							: undefined,
+				});
+				console.log(
+					"Filtered AWaRe Categorization API Response:",
+					awareStatsRes
+				);
+				setAwareStats(awareStatsRes);
+			} catch (err) {
+				console.error(
+					"Error fetching filtered AWaRe categorization data:",
+					err
+				);
+			}
+		};
+
+		// Only fetch if we have patient data loaded (to avoid unnecessary calls)
+		if (allPatients.length > 0) {
+			fetchAwareCategorization();
+		}
+	}, [
+		selectedFromDate,
+		selectedToDate,
+		selectedRegion,
+		selectedDistrict,
+		selectedSubCounty,
+		selectedFacility,
+		selectedLevelOfCare,
+		selectedOwnership,
+		allPatients.length,
+	]);
+
+	// Re-fetch basic metrics data when filters change
+	useEffect(() => {
+		const fetchBasicMetrics = async () => {
+			try {
+				const allBasicMetrics = await PPSApi.getBasicMetric({
+					start_date:
+						selectedFromDate !== "all"
+							? selectedFromDate
+							: undefined,
+					end_date:
+						selectedToDate !== "all"
+							? selectedToDate
+							: undefined,
+					region:
+						selectedRegion !== "all"
+							? selectedRegion
+							: undefined,
+					district:
+						selectedDistrict !== "all"
+							? selectedDistrict
+							: undefined,
+					subcounty:
+						selectedSubCounty !== "all"
+							? selectedSubCounty
+							: undefined,
+					facility:
+						selectedFacility !== "all"
+							? selectedFacility
+							: undefined,
+					level:
+						selectedLevelOfCare !== "all"
+							? selectedLevelOfCare
+							: undefined,
+					ownership:
+						selectedOwnership !== "all"
+							? selectedOwnership
+							: undefined,
+				});
+				console.log(
+					"Filtered Basic Metrics API Response:",
+					allBasicMetrics
+				);
+				setAllBasicMetrics(allBasicMetrics);
+			} catch (err) {
+				console.error(
+					"Error fetching filtered basic metrics data:",
+					err
+				);
+			}
+		};
+
+		// Only fetch if we have patient data loaded (to avoid unnecessary calls)
+		if (allPatients.length > 0) {
+			fetchBasicMetrics();
+		}
+	}, [
+		selectedFromDate,
+		selectedToDate,
+		selectedRegion,
+		selectedDistrict,
+		selectedSubCounty,
+		selectedFacility,
+		selectedLevelOfCare,
+		selectedOwnership,
+		allPatients.length,
+	]);
+
+	// Re-fetch culture metrics data when filters change
+	useEffect(() => {
+		const fetchCultureMetrics = async () => {
+			try {
+				const allCultureMetrics = await PPSApi.getCultureMetric({
+					start_date:
+						selectedFromDate !== "all"
+							? selectedFromDate
+							: undefined,
+					end_date:
+						selectedToDate !== "all"
+							? selectedToDate
+							: undefined,
+					region:
+						selectedRegion !== "all"
+							? selectedRegion
+							: undefined,
+					district:
+						selectedDistrict !== "all"
+							? selectedDistrict
+							: undefined,
+					subcounty:
+						selectedSubCounty !== "all"
+							? selectedSubCounty
+							: undefined,
+					facility:
+						selectedFacility !== "all"
+							? selectedFacility
+							: undefined,
+					level:
+						selectedLevelOfCare !== "all"
+							? selectedLevelOfCare
+							: undefined,
+					ownership:
+						selectedOwnership !== "all"
+							? selectedOwnership
+							: undefined,
+				});
+				console.log(
+					"Filtered Culture Metrics API Response:",
+					allCultureMetrics
+				);
+				setAllCultureMetrics(allCultureMetrics);
+			} catch (err) {
+				console.error(
+					"Error fetching filtered culture metrics data:",
+					err
+				);
+			}
+		};
+
+		// Only fetch if we have patient data loaded (to avoid unnecessary calls)
+		if (allPatients.length > 0) {
+			fetchCultureMetrics();
+		}
+	}, [
+		selectedFromDate,
+		selectedToDate,
+		selectedRegion,
+		selectedDistrict,
+		selectedSubCounty,
+		selectedFacility,
+		selectedLevelOfCare,
+		selectedOwnership,
+		allPatients.length,
+	]);
+
+	// Re-fetch generic metrics data when filters change
+	useEffect(() => {
+		const fetchGenericMetrics = async () => {
+			try {
+				const allGenericMetrics = await PPSApi.getGenericMetric({
+					start_date:
+						selectedFromDate !== "all"
+							? selectedFromDate
+							: undefined,
+					end_date:
+						selectedToDate !== "all"
+							? selectedToDate
+							: undefined,
+					region:
+						selectedRegion !== "all"
+							? selectedRegion
+							: undefined,
+					district:
+						selectedDistrict !== "all"
+							? selectedDistrict
+							: undefined,
+					subcounty:
+						selectedSubCounty !== "all"
+							? selectedSubCounty
+							: undefined,
+					facility:
+						selectedFacility !== "all"
+							? selectedFacility
+							: undefined,
+					level:
+						selectedLevelOfCare !== "all"
+							? selectedLevelOfCare
+							: undefined,
+					ownership:
+						selectedOwnership !== "all"
+							? selectedOwnership
+							: undefined,
+				});
+				console.log(
+					"Filtered Generic Metrics API Response:",
+					allGenericMetrics
+				);
+				setAllGenericMetrics(allGenericMetrics);
+			} catch (err) {
+				console.error(
+					"Error fetching filtered generic metrics data:",
+					err
+				);
+			}
+		};
+
+		// Only fetch if we have patient data loaded (to avoid unnecessary calls)
+		if (allPatients.length > 0) {
+			fetchGenericMetrics();
+		}
+	}, [
+		selectedFromDate,
+		selectedToDate,
+		selectedRegion,
+		selectedDistrict,
+		selectedSubCounty,
+		selectedFacility,
+		selectedLevelOfCare,
+		selectedOwnership,
+		allPatients.length,
+	]);
+
+	// Re-fetch guideline metrics data when filters change
+	useEffect(() => {
+		const fetchGuidelineMetrics = async () => {
+			try {
+				const allGuideMetrics = await PPSApi.getGuidelineMetric({
+					start_date:
+						selectedFromDate !== "all"
+							? selectedFromDate
+							: undefined,
+					end_date:
+						selectedToDate !== "all"
+							? selectedToDate
+							: undefined,
+					region:
+						selectedRegion !== "all"
+							? selectedRegion
+							: undefined,
+					district:
+						selectedDistrict !== "all"
+							? selectedDistrict
+							: undefined,
+					subcounty:
+						selectedSubCounty !== "all"
+							? selectedSubCounty
+							: undefined,
+					facility:
+						selectedFacility !== "all"
+							? selectedFacility
+							: undefined,
+					level:
+						selectedLevelOfCare !== "all"
+							? selectedLevelOfCare
+							: undefined,
+					ownership:
+						selectedOwnership !== "all"
+							? selectedOwnership
+							: undefined,
+				});
+				console.log(
+					"Filtered Guideline Metrics API Response:",
+					allGuideMetrics
+				);
+				setGuideMetrics(allGuideMetrics);
+			} catch (err) {
+				console.error(
+					"Error fetching filtered guideline metrics data:",
+					err
+				);
+			}
+		};
+
+		// Only fetch if we have patient data loaded (to avoid unnecessary calls)
+		if (allPatients.length > 0) {
+			fetchGuidelineMetrics();
+		}
+	}, [
+		selectedFromDate,
+		selectedToDate,
+		selectedRegion,
+		selectedDistrict,
+		selectedSubCounty,
+		selectedFacility,
+		selectedLevelOfCare,
+		selectedOwnership,
+		allPatients.length,
+	]);
+
+	// Re-fetch indicators data when filters change
+	useEffect(() => {
+		const fetchIndicators = async () => {
+			try {
+				const allIndicators = await PPSApi.getIndicators({
+					start_date:
+						selectedFromDate !== "all"
+							? selectedFromDate
+							: undefined,
+					end_date:
+						selectedToDate !== "all"
+							? selectedToDate
+							: undefined,
+					region:
+						selectedRegion !== "all"
+							? selectedRegion
+							: undefined,
+					district:
+						selectedDistrict !== "all"
+							? selectedDistrict
+							: undefined,
+					subcounty:
+						selectedSubCounty !== "all"
+							? selectedSubCounty
+							: undefined,
+					facility:
+						selectedFacility !== "all"
+							? selectedFacility
+							: undefined,
+					level:
+						selectedLevelOfCare !== "all"
+							? selectedLevelOfCare
+							: undefined,
+					ownership:
+						selectedOwnership !== "all"
+							? selectedOwnership
+							: undefined,
+				});
+				console.log(
+					"Filtered Indicators API Response:",
+					allIndicators
+				);
+				setAllIndicators(allIndicators);
+			} catch (err) {
+				console.error(
+					"Error fetching filtered indicators data:",
+					err
+				);
+			}
+		};
+
+		// Only fetch if we have patient data loaded (to avoid unnecessary calls)
+		if (allPatients.length > 0) {
+			fetchIndicators();
+		}
+	}, [
+		selectedFromDate,
+		selectedToDate,
+		selectedRegion,
+		selectedDistrict,
+		selectedSubCounty,
+		selectedFacility,
+		selectedLevelOfCare,
+		selectedOwnership,
+		allPatients.length,
+	]);
+
+	// Re-fetch patient days metrics data when filters change
+	useEffect(() => {
+		const fetchPatientDaysMetrics = async () => {
+			try {
+				const allPatientDaysMetrics =
+					await PPSApi.getPatientDaysMetric({
+						start_date:
+							selectedFromDate !== "all"
+								? selectedFromDate
+								: undefined,
+						end_date:
+							selectedToDate !== "all"
+								? selectedToDate
+								: undefined,
+						region:
+							selectedRegion !== "all"
+								? selectedRegion
+								: undefined,
+						district:
+							selectedDistrict !== "all"
+								? selectedDistrict
+								: undefined,
+						subcounty:
+							selectedSubCounty !== "all"
+								? selectedSubCounty
+								: undefined,
+						facility:
+							selectedFacility !== "all"
+								? selectedFacility
+								: undefined,
+						level:
+							selectedLevelOfCare !== "all"
+								? selectedLevelOfCare
+								: undefined,
+						ownership:
+							selectedOwnership !== "all"
+								? selectedOwnership
+								: undefined,
+					});
+				console.log(
+					"Filtered Patient Days Metrics API Response:",
+					allPatientDaysMetrics
+				);
+				setAllPatientDaysMetrics(allPatientDaysMetrics);
+			} catch (err) {
+				console.error(
+					"Error fetching filtered patient days metrics data:",
+					err
+				);
+			}
+		};
+
+		// Only fetch if we have patient data loaded (to avoid unnecessary calls)
+		if (allPatients.length > 0) {
+			fetchPatientDaysMetrics();
+		}
+	}, [
+		selectedFromDate,
+		selectedToDate,
+		selectedRegion,
+		selectedDistrict,
+		selectedSubCounty,
+		selectedFacility,
+		selectedLevelOfCare,
+		selectedOwnership,
+		allPatients.length,
+	]);
+
+	// Re-fetch specimen stats data when filters change
+	useEffect(() => {
+		const fetchSpecimenStats = async () => {
+			try {
+				const specimenStatsRes = await PPSApi.getSpecimenStats({
+					start_date:
+						selectedFromDate !== "all"
+							? selectedFromDate
+							: undefined,
+					end_date:
+						selectedToDate !== "all"
+							? selectedToDate
+							: undefined,
+					region:
+						selectedRegion !== "all"
+							? selectedRegion
+							: undefined,
+					district:
+						selectedDistrict !== "all"
+							? selectedDistrict
+							: undefined,
+					subcounty:
+						selectedSubCounty !== "all"
+							? selectedSubCounty
+							: undefined,
+					facility:
+						selectedFacility !== "all"
+							? selectedFacility
+							: undefined,
+					level:
+						selectedLevelOfCare !== "all"
+							? selectedLevelOfCare
+							: undefined,
+					ownership:
+						selectedOwnership !== "all"
+							? selectedOwnership
+							: undefined,
+				});
+				console.log(
+					"Filtered Specimen Stats API Response:",
+					specimenStatsRes
+				);
+				setSpecimenStats(specimenStatsRes);
+			} catch (err) {
+				console.error(
+					"Error fetching filtered specimen stats data:",
+					err
+				);
+			}
+		};
+
+		// Only fetch if we have patient data loaded (to avoid unnecessary calls)
+		if (allPatients.length > 0) {
+			fetchSpecimenStats();
+		}
+	}, [
+		selectedFromDate,
+		selectedToDate,
+		selectedRegion,
+		selectedDistrict,
+		selectedSubCounty,
+		selectedFacility,
+		selectedLevelOfCare,
+		selectedOwnership,
+		allPatients.length,
+	]);
 
 	// Close export menu when clicking outside
 	useEffect(() => {
@@ -752,6 +1663,8 @@ export default function PPSDashboard() {
 		{ id: "upload", label: "Data Upload", icon: Upload },
 		{ id: "database", label: "Database", icon: Database },
 	];
+
+	console.log("Appropriate Diagnosis Data:", appropriateDiagnosisData);
 
 	return (
 		<div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
@@ -1723,7 +2636,9 @@ export default function PPSDashboard() {
 											{loading
 												? "..."
 												: allBasicMetrics
-												? allBasicMetrics.average_antibiotics_per_patient
+												? allBasicMetrics.average_antibiotics_per_patient.toFixed(
+														2
+												  )
 												: "0.0"}
 										</div>
 										<p className="text-xs text-blue-600 dark:text-blue-400">
@@ -1753,7 +2668,9 @@ export default function PPSDashboard() {
 											{loading
 												? "..."
 												: allBasicMetrics
-												? allBasicMetrics.percentage_encounter_with_antibiotic
+												? allBasicMetrics.percentage_encounter_with_antibiotic.toFixed(
+														2
+												  )
 												: "0.0"}
 										</div>
 										<p className="text-xs text-emerald-600 dark:text-emerald-400">
@@ -1783,8 +2700,8 @@ export default function PPSDashboard() {
 											{loading
 												? "..."
 												: allGenericMetrics
-												? Math.floor(
-														allGenericMetrics?.percentage_generic_prescriptions
+												? allGenericMetrics?.percentage_generic_prescriptions.toFixed(
+														2
 												  )
 												: "0.0"}
 										</div>
@@ -1812,7 +2729,9 @@ export default function PPSDashboard() {
 												? "..."
 												: allCultureMetrics
 												? Math.floor(
-														allCultureMetrics?.percentage_culture_based_prescriptions
+														allCultureMetrics?.percentage_culture_based_prescriptions.toFixed(
+															2
+														)
 												  )
 												: "0.0"}{" "}
 											%
@@ -1844,8 +2763,8 @@ export default function PPSDashboard() {
 											{loading
 												? "..."
 												: allGuideMetrics
-												? Math.floor(
-														allGuideMetrics?.percentage_guideline_compliant
+												? allGuideMetrics?.percentage_guideline_compliant.toFixed(
+														2
 												  )
 												: "0.0"}{" "}
 											%
@@ -1869,9 +2788,9 @@ export default function PPSDashboard() {
 										<div className="text-xl font-bold text-slate-900 dark:text-slate-100">
 											{loading
 												? "..."
-												: allDiagnosisMetrics
-												? Math.floor(
-														allDiagnosisMetrics?.percentage_appropriate_diagnosis
+												: appropriateDiagnosisData
+												? appropriateDiagnosisData?.percentage_appropriate_diagnosis?.toFixed(
+														2
 												  )
 												: "0.0"}{" "}
 											%

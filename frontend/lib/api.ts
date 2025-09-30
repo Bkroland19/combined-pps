@@ -1,5 +1,5 @@
 // API configuration for Point Prevalence Survey backend
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://csf.health.go.ug'
 
 // Types matching backend models
 export interface Patient {
@@ -215,25 +215,103 @@ export class PPSApi {
     }
 
 
-    static async getBasicMetric(): Promise<any> {
-        const response = await fetch(`${this.baseUrl}/api/v1/pps/basic-metrics`)
-        if (!response.ok) throw new Error('Failed to fetch')
+    static async getBasicMetric(params?: {
+        start_date?: string
+        end_date?: string
+        region?: string
+        district?: string
+        subcounty?: string
+        facility?: string
+        level?: string
+        ownership?: string
+    }): Promise<any> {
+        const searchParams = new URLSearchParams()
+        if (params) {
+            Object.entries(params).forEach(([key, value]) => {
+                if (value !== undefined && value !== null && value !== '') {
+                    searchParams.append(key, value.toString())
+                }
+            })
+        }
 
-        return response.json()
+        const url = `${this.baseUrl}/api/v1/pps/basic-metrics${searchParams.toString() ? `?${searchParams.toString()}` : ''}`
+        console.log('Fetching basic metrics from:', url)
+
+        const response = await fetch(url)
+        if (!response.ok) {
+            console.error('Basic metrics API error:', response.status, response.statusText)
+            throw new Error(`Failed to fetch basic metrics: ${response.status} ${response.statusText}`)
+        }
+
+        const data = await response.json()
+        console.log('Basic metrics API response:', data)
+        return data
     }
 
-    static async getCultureMetric(): Promise<any> {
-        const response = await fetch(`${this.baseUrl}/api/v1/pps/culture-metrics`)
-        if (!response.ok) throw new Error('Failed to fetch')
+    static async getCultureMetric(params?: {
+        start_date?: string
+        end_date?: string
+        region?: string
+        district?: string
+        subcounty?: string
+        facility?: string
+        level?: string
+        ownership?: string
+    }): Promise<any> {
+        const searchParams = new URLSearchParams()
+        if (params) {
+            Object.entries(params).forEach(([key, value]) => {
+                if (value !== undefined && value !== null && value !== '') {
+                    searchParams.append(key, value.toString())
+                }
+            })
+        }
 
-        return response.json()
+        const url = `${this.baseUrl}/api/v1/pps/culture-metrics${searchParams.toString() ? `?${searchParams.toString()}` : ''}`
+        console.log('Fetching culture metrics from:', url)
+
+        const response = await fetch(url)
+        if (!response.ok) {
+            console.error('Culture metrics API error:', response.status, response.statusText)
+            throw new Error(`Failed to fetch culture metrics: ${response.status} ${response.statusText}`)
+        }
+
+        const data = await response.json()
+        console.log('Culture metrics API response:', data)
+        return data
     }
 
-    static async getPatientDaysMetric(): Promise<any> {
-        const response = await fetch(`${this.baseUrl}/api/v1/pps/long-stay-patients`)
-        if (!response.ok) throw new Error('Failed to fetch')
+    static async getPatientDaysMetric(params?: {
+        start_date?: string
+        end_date?: string
+        region?: string
+        district?: string
+        subcounty?: string
+        facility?: string
+        level?: string
+        ownership?: string
+    }): Promise<any> {
+        const searchParams = new URLSearchParams()
+        if (params) {
+            Object.entries(params).forEach(([key, value]) => {
+                if (value !== undefined && value !== null && value !== '') {
+                    searchParams.append(key, value.toString())
+                }
+            })
+        }
 
-        return response.json()
+        const url = `${this.baseUrl}/api/v1/pps/long-stay-patients${searchParams.toString() ? `?${searchParams.toString()}` : ''}`
+        console.log('Fetching patient days metrics from:', url)
+
+        const response = await fetch(url)
+        if (!response.ok) {
+            console.error('Patient days metrics API error:', response.status, response.statusText)
+            throw new Error(`Failed to fetch patient days metrics: ${response.status} ${response.statusText}`)
+        }
+
+        const data = await response.json()
+        console.log('Patient days metrics API response:', data)
+        return data
     }
 
     static async getDiagnosisMetric(): Promise<any> {
@@ -243,24 +321,135 @@ export class PPSApi {
         return response.json()
     }
 
-    static async getGenericMetric(): Promise<any> {
-        const response = await fetch(`${this.baseUrl}/api/v1/pps/generic-metrics`)
-        if (!response.ok) throw new Error('Failed to fetch')
+    static async getAppropriateDiagnosis(params?: {
+        start_date?: string
+        end_date?: string
+        region?: string
+        district?: string
+        subcounty?: string
+        facility?: string
+        level?: string
+        ownership?: string
+    }): Promise<any> {
+        const searchParams = new URLSearchParams()
+        if (params) {
+            Object.entries(params).forEach(([key, value]) => {
+                if (value !== undefined && value !== null && value !== '') {
+                    searchParams.append(key, value.toString())
+                }
+            })
+        }
 
-        return response.json()
+        const url = `${this.baseUrl}/api/v1/pps/appropriate-diagnosis${searchParams.toString() ? `?${searchParams.toString()}` : ''}`
+        console.log('Fetching appropriate diagnosis from:', url)
+
+        const response = await fetch(url)
+        if (!response.ok) {
+            console.error('Appropriate diagnosis API error:', response.status, response.statusText)
+            throw new Error(`Failed to fetch appropriate diagnosis data: ${response.status} ${response.statusText}`)
+        }
+
+        const data = await response.json()
+        console.log('Appropriate diagnosis API response:', data)
+        return data
     }
-    static async getGuidelineMetric(): Promise<any> {
-        const response = await fetch(`${this.baseUrl}/api/v1/pps/guideline-metrics`)
-        if (!response.ok) throw new Error('Failed to fetch')
 
-        return response.json()
+    static async getGenericMetric(params?: {
+        start_date?: string
+        end_date?: string
+        region?: string
+        district?: string
+        subcounty?: string
+        facility?: string
+        level?: string
+        ownership?: string
+    }): Promise<any> {
+        const searchParams = new URLSearchParams()
+        if (params) {
+            Object.entries(params).forEach(([key, value]) => {
+                if (value !== undefined && value !== null && value !== '') {
+                    searchParams.append(key, value.toString())
+                }
+            })
+        }
+
+        const url = `${this.baseUrl}/api/v1/pps/generic-metrics${searchParams.toString() ? `?${searchParams.toString()}` : ''}`
+        console.log('Fetching generic metrics from:', url)
+
+        const response = await fetch(url)
+        if (!response.ok) {
+            console.error('Generic metrics API error:', response.status, response.statusText)
+            throw new Error(`Failed to fetch generic metrics: ${response.status} ${response.statusText}`)
+        }
+
+        const data = await response.json()
+        console.log('Generic metrics API response:', data)
+        return data
+    }
+    static async getGuidelineMetric(params?: {
+        start_date?: string
+        end_date?: string
+        region?: string
+        district?: string
+        subcounty?: string
+        facility?: string
+        level?: string
+        ownership?: string
+    }): Promise<any> {
+        const searchParams = new URLSearchParams()
+        if (params) {
+            Object.entries(params).forEach(([key, value]) => {
+                if (value !== undefined && value !== null && value !== '') {
+                    searchParams.append(key, value.toString())
+                }
+            })
+        }
+
+        const url = `${this.baseUrl}/api/v1/pps/guideline-metrics${searchParams.toString() ? `?${searchParams.toString()}` : ''}`
+        console.log('Fetching guideline metrics from:', url)
+
+        const response = await fetch(url)
+        if (!response.ok) {
+            console.error('Guideline metrics API error:', response.status, response.statusText)
+            throw new Error(`Failed to fetch guideline metrics: ${response.status} ${response.statusText}`)
+        }
+
+        const data = await response.json()
+        console.log('Guideline metrics API response:', data)
+        return data
     }
 
-    static async getIndicators(): Promise<any> {
-        const response = await fetch(`${this.baseUrl}/api/v1/pps/indicators`)
-        if (!response.ok) throw new Error('Failed to fetch')
+    static async getIndicators(params?: {
+        start_date?: string
+        end_date?: string
+        region?: string
+        district?: string
+        subcounty?: string
+        facility?: string
+        level?: string
+        ownership?: string
+    }): Promise<any> {
+        const searchParams = new URLSearchParams()
+        if (params) {
+            Object.entries(params).forEach(([key, value]) => {
+                if (value !== undefined && value !== null && value !== '') {
+                    searchParams.append(key, value.toString())
+                }
+            })
+        }
 
-        return response.json()
+        const url = `${this.baseUrl}/api/v1/pps/indicators${searchParams.toString() ? `?${searchParams.toString()}` : ''}`
+        console.log('Fetching indicators from:', url)
+
+        const response = await fetch(url)
+        if (!response.ok) {
+            console.error('Indicators API error:', response.status, response.statusText)
+            throw new Error(`Failed to fetch indicators: ${response.status} ${response.statusText}`)
+        }
+
+        const data = await response.json()
+        console.log('Indicators API response:', data)
+        return data
     }
 
 
@@ -332,33 +521,104 @@ export class PPSApi {
         type?: string
         result?: string
         patient_id?: string
+        start_date?: string
+        end_date?: string
+        region?: string
+        district?: string
+        subcounty?: string
+        facility?: string
+        level?: string
+        ownership?: string
         page?: number
         limit?: number
     }): Promise<PaginatedResponse<Specimen>> {
         const searchParams = new URLSearchParams()
         if (params) {
             Object.entries(params).forEach(([key, value]) => {
-                if (value !== undefined) {
+                if (value !== undefined && value !== null && value !== '') {
                     searchParams.append(key, value.toString())
                 }
             })
         }
 
-        const response = await fetch(`${this.baseUrl}/api/v1/specimens?${searchParams}`)
-        if (!response.ok) throw new Error('Failed to fetch specimens')
-        return response.json()
+        const url = `${this.baseUrl}/api/v1/specimens${searchParams.toString() ? `?${searchParams.toString()}` : ''}`
+        console.log('Fetching specimens from:', url)
+
+        const response = await fetch(url)
+        if (!response.ok) {
+            console.error('Specimens API error:', response.status, response.statusText)
+            throw new Error(`Failed to fetch specimens: ${response.status} ${response.statusText}`)
+        }
+
+        const data = await response.json()
+        console.log('Specimens API response:', data)
+        return data
     }
 
-    static async getSpecimenStats(): Promise<SpecimenStats> {
-        const response = await fetch(`${this.baseUrl}/api/v1/specimens/stats`)
-        if (!response.ok) throw new Error('Failed to fetch specimen stats')
-        return response.json()
+    static async getSpecimenStats(params?: {
+        start_date?: string
+        end_date?: string
+        region?: string
+        district?: string
+        subcounty?: string
+        facility?: string
+        level?: string
+        ownership?: string
+    }): Promise<SpecimenStats> {
+        const searchParams = new URLSearchParams()
+        if (params) {
+            Object.entries(params).forEach(([key, value]) => {
+                if (value !== undefined && value !== null && value !== '') {
+                    searchParams.append(key, value.toString())
+                }
+            })
+        }
+
+        const url = `${this.baseUrl}/api/v1/specimens/stats${searchParams.toString() ? `?${searchParams.toString()}` : ''}`
+        console.log('Fetching specimen stats from:', url)
+
+        const response = await fetch(url)
+        if (!response.ok) {
+            console.error('Specimen stats API error:', response.status, response.statusText)
+            throw new Error(`Failed to fetch specimen stats: ${response.status} ${response.statusText}`)
+        }
+
+        const data = await response.json()
+        console.log('Specimen stats API response:', data)
+        return data
     }
 
-    static async getAwareCategorization(): Promise<AwareStats> {
-        const response = await fetch(`${this.baseUrl}/api/v1/pps/aware-categorization`)
-        if (!response.ok) throw new Error('Failed to fetch AWaRe categorization')
-        return response.json()
+    static async getAwareCategorization(params?: {
+        start_date?: string
+        end_date?: string
+        region?: string
+        district?: string
+        subcounty?: string
+        facility?: string
+        level?: string
+        ownership?: string
+    }): Promise<AwareStats> {
+        const searchParams = new URLSearchParams()
+        if (params) {
+            Object.entries(params).forEach(([key, value]) => {
+                if (value !== undefined && value !== null && value !== '') {
+                    searchParams.append(key, value.toString())
+                }
+            })
+        }
+
+        const url = `${this.baseUrl}/api/v1/pps/aware-categorization${searchParams.toString() ? `?${searchParams.toString()}` : ''}`
+        console.log('Fetching AWaRe categorization from:', url)
+
+        const response = await fetch(url)
+        if (!response.ok) {
+            console.error('AWaRe categorization API error:', response.status, response.statusText)
+            throw new Error(`Failed to fetch AWaRe categorization: ${response.status} ${response.statusText}`)
+        }
+
+        const data = await response.json()
+        console.log('AWaRe categorization API response:', data)
+        return data
     }
 
     // Upload endpoints
