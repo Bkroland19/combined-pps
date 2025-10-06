@@ -491,6 +491,10 @@ export default function PPSDashboard() {
 							selectedOwnership !== "all"
 								? selectedOwnership
 								: undefined,
+						ward:
+							selectedWardName !== "all"
+								? selectedWardName
+								: undefined,
 					}),
 					PPSApi.getDiagnosisMetric(),
 					PPSApi.getAppropriateDiagnosis({
@@ -559,6 +563,10 @@ export default function PPSDashboard() {
 						ownership:
 							selectedOwnership !== "all"
 								? selectedOwnership
+								: undefined,
+						ward:
+							selectedWardName !== "all"
+								? selectedWardName
 								: undefined,
 					}),
 					PPSApi.getIndicators({
@@ -665,6 +673,10 @@ export default function PPSDashboard() {
 						ownership:
 							selectedOwnership !== "all"
 								? selectedOwnership
+								: undefined,
+						ward:
+							selectedWardName !== "all"
+								? selectedWardName
 								: undefined,
 					}),
 					PPSApi.getAwareCategorization({
@@ -988,6 +1000,10 @@ export default function PPSDashboard() {
 						selectedOwnership !== "all"
 							? selectedOwnership
 							: undefined,
+					ward:
+						selectedWardName !== "all"
+							? selectedWardName
+							: undefined,
 				});
 				console.log(
 					"Filtered Culture Metrics API Response:",
@@ -1015,6 +1031,7 @@ export default function PPSDashboard() {
 		selectedFacility,
 		selectedLevelOfCare,
 		selectedOwnership,
+		selectedWardName,
 		allPatients.length,
 	]);
 
@@ -1055,6 +1072,10 @@ export default function PPSDashboard() {
 						selectedOwnership !== "all"
 							? selectedOwnership
 							: undefined,
+					ward:
+						selectedWardName !== "all"
+							? selectedWardName
+							: undefined,
 				});
 				console.log(
 					"Filtered Generic Metrics API Response:",
@@ -1082,6 +1103,7 @@ export default function PPSDashboard() {
 		selectedFacility,
 		selectedLevelOfCare,
 		selectedOwnership,
+		selectedWardName,
 		allPatients.length,
 	]);
 
@@ -1122,6 +1144,10 @@ export default function PPSDashboard() {
 						selectedOwnership !== "all"
 							? selectedOwnership
 							: undefined,
+					ward:
+						selectedWardName !== "all"
+							? selectedWardName
+							: undefined,
 				});
 				console.log(
 					"Filtered Guideline Metrics API Response:",
@@ -1149,6 +1175,7 @@ export default function PPSDashboard() {
 		selectedFacility,
 		selectedLevelOfCare,
 		selectedOwnership,
+		selectedWardName,
 		allPatients.length,
 	]);
 
@@ -1257,6 +1284,10 @@ export default function PPSDashboard() {
 							selectedOwnership !== "all"
 								? selectedOwnership
 								: undefined,
+						ward:
+							selectedWardName !== "all"
+								? selectedWardName
+								: undefined,
 					});
 				console.log(
 					"Filtered Patient Days Metrics API Response:",
@@ -1284,6 +1315,7 @@ export default function PPSDashboard() {
 		selectedFacility,
 		selectedLevelOfCare,
 		selectedOwnership,
+		selectedWardName,
 		allPatients.length,
 	]);
 
@@ -2130,7 +2162,8 @@ export default function PPSDashboard() {
 									<Bell className="h-5 w-5" />
 								</Button>
 
-								<div className="relative export-menu-container">
+								{/* Export button commented out */}
+								{/* <div className="relative export-menu-container">
 									<Button
 										size="sm"
 										disabled={exporting}
@@ -2238,7 +2271,7 @@ export default function PPSDashboard() {
 											</div>
 										</div>
 									)}
-								</div>
+								</div> */}
 							</div>
 						</div>
 					</div>
@@ -2550,7 +2583,7 @@ export default function PPSDashboard() {
 										? "..."
 										: [
 												...new Set(
-													allPatients.map(
+													filteredPatients.map(
 														(p) =>
 															p.facility
 													)
@@ -2635,10 +2668,8 @@ export default function PPSDashboard() {
 										<div className="text-2xl font-bold text-blue-900 dark:text-blue-100">
 											{loading
 												? "..."
-												: allBasicMetrics
-												? allBasicMetrics.average_antibiotics_per_patient.toFixed(
-														2
-												  )
+												: filteredStats?.patients_on_antibiotic && filteredStats?.patients_on_antibiotic > 0
+												? (filteredStats.total_antibiotics / filteredStats.patients_on_antibiotic).toFixed(2)
 												: "0.0"}
 										</div>
 										<p className="text-xs text-blue-600 dark:text-blue-400">
