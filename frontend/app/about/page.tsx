@@ -555,31 +555,6 @@ export default function AboutPage() {
                       Uganda
                     </p>
                   </div>
-
-                  {/* Participating Health Facilities */}
-                  <div className="flex flex-col items-center p-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/30 hover:shadow-md transition-shadow">
-                    <div className="w-24 h-24 mb-3 relative bg-white dark:bg-slate-800 rounded-lg flex items-center justify-center border border-slate-200 dark:border-slate-700">
-                      <Image
-                        src="/partners/participating-facilities.png"
-                        alt="Participating health facilities across Uganda"
-                        width={96}
-                        height={96}
-                        className="object-contain p-2"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = 'none';
-                          const parent = target.parentElement;
-                          if (parent) {
-                            parent.innerHTML =
-                              '<div class="text-slate-400 dark:text-slate-600 text-xs text-center p-2">Logo</div>';
-                          }
-                        }}
-                      />
-                    </div>
-                    <p className="text-sm font-medium text-slate-900 dark:text-slate-100 text-center">
-                      Participating health facilities across Uganda
-                    </p>
-                  </div>
                 </div>
               </CardContent>
             </Card>
