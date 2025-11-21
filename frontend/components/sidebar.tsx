@@ -29,11 +29,11 @@ interface SidebarProps {
 
 const sidebarItems: SidebarItem[] = [
   { id: 'visuals', label: 'Visuals', icon: Eye },
-  { id: 'overview', label: 'Overview', icon: Home },
-  { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-  { id: 'patients', label: 'Patients', icon: Users },
-  { id: 'antibiotics', label: 'Antibiotics', icon: Pill },
-  { id: 'specimens', label: 'Specimens', icon: TestTube },
+  // { id: 'overview', label: 'Overview', icon: Home },
+  // { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+  // { id: 'patients', label: 'Patients', icon: Users },
+  // { id: 'antibiotics', label: 'Antibiotics', icon: Pill },
+  // { id: 'specimens', label: 'Specimens', icon: TestTube },
   { id: 'upload', label: 'Data Upload', icon: Upload },
   { id: 'database', label: 'Database', icon: Database },
 ];
@@ -72,11 +72,23 @@ export function Sidebar({
         </nav>
 
         {/* Sidebar Footer */}
-        <div className="p-4 border-t border-slate-200/50 dark:border-slate-800/50">
+        <div className="p-4 border-t border-slate-200/50 dark:border-slate-800/50 space-y-3">
           <Button variant="ghost" size="sm" className="w-full justify-start">
             <Settings className="h-4 w-4 mr-2" />
             Settings
           </Button>
+          <p className="text-xs text-slate-500 dark:text-slate-400 text-center leading-relaxed">
+            This work is licensed under a{' '}
+            <a
+              href="https://creativecommons.org/licenses/by/4.0/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-emerald-600 dark:text-emerald-400 hover:underline"
+            >
+              Creative Commons Attribution 4.0 International License
+            </a>
+            .
+          </p>
         </div>
       </div>
     </div>
