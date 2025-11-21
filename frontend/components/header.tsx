@@ -117,10 +117,11 @@ export function Header() {
               <Button
                 variant="outline"
                 size="icon"
-                className="h-8 w-8 hover:bg-slate-500 dark:hover:bg-slate-800"
+                className="h-8 w-20 hover:bg-slate-500 dark:hover:bg-slate-800"
                 title="About"
               >
                 <Info className="h-4 w-4" />
+                <span className="text-xs">About</span>
               </Button>
             </Link>
 
